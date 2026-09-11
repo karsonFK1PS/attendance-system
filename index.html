@@ -20,6 +20,8 @@
       flex-direction: column;
       align-items: center;
       -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
     }
     .container {
       width: 100%;
@@ -64,23 +66,23 @@
     .btn-sync:hover {
       background: #f8f9fa;
     }
-    input[type="text"] {
+
+    /* 偽裝成輸入框的指示區域（純 div，非 input，安卓系統絕對無法叫起鍵盤） */
+    .scanner-box {
       width: 80%;
+      margin: 15px auto;
       padding: 14px 20px;
       font-size: 20px;
-      border: 2px solid #dadce0;
+      border: 2px dashed var(--primary);
+      background-color: #e8f0fe;
+      color: #1a73e8;
       border-radius: 8px;
       text-align: center;
-      letter-spacing: 2px;
-      outline: none;
-      transition: border-color 0.2s;
-      /* 防止在平板長按選取彈出放大鏡或複製選單 */
-      -webkit-user-select: none;
-      user-select: none;
+      letter-spacing: 1px;
+      box-sizing: border-box;
+      font-weight: 500;
     }
-    input[type="text"]:focus {
-      border-color: var(--primary);
-    }
+
     .status-area {
       min-height: 110px;
       display: flex;
@@ -142,18 +144,13 @@
       <button class="btn-sync" onclick="fetchStudentRoster(true)">🔄 強制同步名單</button>
     </div>
 
-    <!-- 加入 inputmode="none" 阻止 Android / iOS 彈出虛擬螢幕鍵盤 -->
-    <input 
-      type="text" 
-      id="cardInput" 
-      inputmode="none" 
-      placeholder="等待感應卡片 (外接讀卡器)..." 
-      autocomplete="off" 
-      autofocus
-    >
+    <!-- 純展示框，不再使用 <input>，彻底杜絕任何虛擬鍵盤彈出的可能 -->
+    <div class="scanner-box" id="scannerIndicator">
+      💳 請將卡片感應讀卡機 / 條碼槍
+    </div>
 
     <div id="statusArea" class="status-area status-idle">
-      <div id="statusMsg" style="font-size: 18px;">請刷卡</div>
+      <div id="statusMsg" style="font-size: 18px;">等待感應中...</div>
     </div>
   </div>
 
@@ -177,40 +174,32 @@
 </div>
 
 <script>
+  // 🔴 您的 Google Apps Script Web App URL
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyegs1aSfkYDS9PqyTIXFFjOcfZwgJDWz-dwfamWgAddAo6DWAW60XRtTz9sZ45VD49/exec";
 
-  const cardInput = document.getElementById('cardInput');
   const statusArea = document.getElementById('statusArea');
   const statusMsg = document.getElementById('statusMsg');
   const historyBody = document.getElementById('historyBody');
   const cacheText = document.getElementById('cacheText');
+  const scannerIndicator = document.getElementById('scannerIndicator');
 
   let studentMap = {};
   let historyLogs = [];
 
-  // 🛡️ 安全存取 localStorage，防止在 App Inventor WebViewer 中崩潰
+  // 安全存儲（兼容 App Inventor 與一般瀏覽器）
   const storage = {
     get: function(key) {
-      try {
-        return window.localStorage ? window.localStorage.getItem(key) : null;
-      } catch(e) {
-        console.warn("WebViewer 不支援 localStorage，切換為純記憶體模式");
-        return null;
-      }
+      try { return window.localStorage ? window.localStorage.getItem(key) : null; }
+      catch(e) { return null; }
     },
     set: function(key, val) {
-      try {
-        if (window.localStorage) window.localStorage.setItem(key, val);
-      } catch(e) {
-        console.warn("無法寫入 localStorage");
-      }
+      try { if (window.localStorage) window.localStorage.setItem(key, val); }
+      catch(e) {}
     }
   };
 
   // 1. 初始化名冊
   window.addEventListener('DOMContentLoaded', () => {
-    ensureFocus();
-
     const cachedData = storage.get('ATTENDANCE_STUDENT_MAP');
     const cachedTime = storage.get('ATTENDANCE_CACHE_TIME');
 
@@ -226,17 +215,12 @@
     }
   });
 
-  // 2. 向 Apps Script 下載全校名冊 (加入 redirect: 'follow' 與詳細錯誤回報)
+  // 2. 向 Apps Script 下載全校名冊
   async function fetchStudentRoster(isManual = false) {
     cacheText.innerText = "⏳ 正在同步 Google Sheets 學生名冊...";
     try {
-      const res = await fetch(SCRIPT_URL, {
-        method: 'GET',
-        redirect: 'follow',
-        cache: 'no-cache'
-      });
-      
-      if (!res.ok) throw new Error("HTTP 狀態碼錯誤: " + res.status);
+      const res = await fetch(SCRIPT_URL, { method: 'GET', redirect: 'follow', cache: 'no-cache' });
+      if (!res.ok) throw new Error("HTTP " + res.status);
 
       const json = await res.json();
       if (json.status === 'success') {
@@ -250,31 +234,12 @@
         cacheText.innerText = "❌ 同步失敗：" + json.message;
       }
     } catch (e) {
-      // 顯示具體錯誤，方便排查是哪裡斷線
       cacheText.innerText = "❌ 無法連線：" + e.message;
       console.error(e);
-    } finally {
-      ensureFocus();
     }
   }
 
-  // 3. 行動裝置聚焦控制
-  function ensureFocus() {
-    cardInput.focus({ preventScroll: true });
-  }
-
-  document.addEventListener('click', (e) => {
-    if (!e.target.classList.contains('btn-sync')) {
-      ensureFocus();
-    }
-  });
-
-  cardInput.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    ensureFocus();
-  });
-
-  // 4. 音效回饋
+  // 3. 音效回饋 (Web Audio API)
   function playSound(type) {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -297,18 +262,38 @@
     } catch(e) {}
   }
 
-  // 5. 監聽條碼槍/讀卡機輸入
-  cardInput.addEventListener('keydown', function(e) {
+  // 4. 🔥 全域監聽外接 USB 讀卡槍（完全繞過 Android 虛擬鍵盤機制）🔥
+  let cardBuffer = '';
+  let lastKeyTime = Date.now();
+
+  window.addEventListener('keydown', function(e) {
+    const currentTime = Date.now();
+
+    // 條碼槍/讀卡機按鍵間隔通常 < 50ms；如果間隔超過 300ms 代表是人手誤觸或其他操作，清空暫存區
+    if (currentTime - lastKeyTime > 300) {
+      cardBuffer = '';
+    }
+    lastKeyTime = currentTime;
+
+    // 讀卡機感應完畢會送出 Enter 鍵
     if (e.key === 'Enter') {
-      const cardId = this.value.trim();
-      if (cardId) {
+      e.preventDefault(); // 阻止系統預設換行或提交行為
+      const cardId = cardBuffer.trim();
+      cardBuffer = ''; // 清空
+
+      if (cardId.length > 0) {
         processCard(cardId);
       }
-      this.value = '';
+      return;
     }
-  });
 
-  // 6. 前端比對 + 背景非同步寫入
+    // 過濾非字符鍵（例如 Shift、Control、Alt 等）
+    if (e.key.length === 1) {
+      cardBuffer += e.key;
+    }
+  }, true);
+
+  // 5. 前端比對 + 背景非同步寫入
   function processCard(cardId) {
     const student = studentMap[cardId];
 
@@ -318,6 +303,7 @@
       return;
     }
 
+    // ⚡ 1 毫秒立刻反映
     playSound('success');
     const nowTime = new Date().toTimeString().split(' ')[0];
     showStatus('success', `
@@ -327,7 +313,7 @@
 
     addHistory(nowTime, student.className, student.classNo, student.chName, cardId);
 
-    // 送出打卡請求
+    // 🚀 背景非同步送出寫入
     fetch(SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
