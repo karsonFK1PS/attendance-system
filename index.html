@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>學校考勤打卡系統</title>
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --success: #34a853;
+      --error: #ea4335;
+      --bg: #f8f9fa;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background-color: var(--bg);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 760px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+    h1 {
+      margin-top: 0;
+      color: #202124;
+      font-size: 24px;
+    }
+    .input-box {
+      margin: 15px 0;
+    }
+    input[type="text"] {
+      width: 80%;
+      padding: 14px 20px;
+      font-size: 20px;
+      border: 2px solid #dadce0;
+      border-radius: 8px;
+      text-align: center;
+      letter-spacing: 2px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+    .status-area {
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-radius: 8px;
+      padding: 12px;
+      transition: background-color 0.3s;
+    }
+    .status-idle { background-color: #f1f3f4; color: #5f6368; }
+    .status-success { background-color: #e6f4ea; color: var(--success); }
+    .status-error { background-color: #fce8e6; color: var(--error); }
+    .status-loading { background-color: #e8f0fe; color: var(--primary); }
+
+    .student-info {
+      font-size: 26px;
+      font-weight: bold;
+      margin: 4px 0;
+    }
+    .timestamp {
+      font-size: 16px;
+      color: #5f6368;
+    }
+    .history-card {
+      text-align: left;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background-color: #f8f9fa;
+      color: #5f6368;
+      font-size: 14px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      background: #e8f0fe;
+      color: var(--primary);
+      border-radius: 4px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <h1>校本資訊助理考勤系統</h1>
+    <p style="color: #70757a; font-size: 14px;">請將條碼槍或讀卡機對準卡片，感應後將自動記錄</p>
+    
+    <div class="input-box">
+      <input type="text" id="cardInput" placeholder="等待拍卡 / 條碼感應..." autocomplete="off" autofocus>
+    </div>
+
+    <div id="statusArea" class="status-area status-idle">
+      <div id="statusMsg" style="font-size: 18px;">請刷卡</div>
+    </div>
+  </div>
+
+  <div class="card history-card">
+    <h3 style="margin-top:0;">本次開啟刷卡紀錄 (最近 10 筆)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>時間</th>
+          <th>班別</th>
+          <th>學號</th>
+          <th>姓名</th>
+          <th>卡號</th>
+        </tr>
+      </thead>
+      <tbody id="historyBody">
+        <tr><td colspan="5" style="text-align:center; color:#9aa0a6;">暫無打卡紀錄</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // 🔴 請將此處替換為您在 Apps Script 部署取得的 Web App URL
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyegs1aSfkYDS9PqyTIXFFjOcfZwgJDWz-dwfamWgAddAo6DWAW60XRtTz9sZ45VD49/exec";
+
+  const cardInput = document.getElementById('cardInput');
+  const statusArea = document.getElementById('statusArea');
+  const statusMsg = document.getElementById('statusMsg');
+  const historyBody = document.getElementById('historyBody');
+
+  let isSubmitting = false;
+  let historyLogs = [];
+
+  // 1. 自動鎖定輸入焦點：點擊畫面任何地方都會自動重新 focus 回輸入框，確保讀卡機隨時可輸入
+  document.addEventListener('click', () => {
+    cardInput.focus();
+  });
+
+  // 2. Web Audio API 自帶音效提示（免額外下載音檔）
+  function playSound(type) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      if (type === 'success') {
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
+      } else {
+        osc.frequency.setValueAtTime(300, ctx.currentTime);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+      }
+    } catch(e) {}
+  }
+
+  // 3. 監聽 Enter 鍵（條碼槍及讀卡機感應後通常會發送 Enter）
+  cardInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      const cardId = this.value.trim();
+      if (cardId && !isSubmitting) {
+        submitAttendance(cardId);
+      }
+      this.value = '';
+    }
+  });
+
+  async function submitAttendance(cardId) {
+    isSubmitting = true;
+    showStatus('loading', '正在記錄考勤中...');
+
+    try {
+      const response = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 使用 text/plain 避免 CORS preflight 限制
+        body: JSON.stringify({ cardId: cardId })
+      });
+
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        playSound('success');
+        const stu = result.student;
+        showStatus('success', `
+          <div class="student-info">${stu.className} (${stu.classNo}) ${stu.chName}</div>
+          <div class="timestamp">簽到成功！時間：${result.time}</div>
+        `);
+        addHistory(result.time, stu.className, stu.classNo, stu.chName, stu.attendanceId);
+      } else if (result.status === 'not_found') {
+        playSound('error');
+        showStatus('error', `未找到此卡號：<b>${cardId}</b>`);
+      } else {
+        playSound('error');
+        showStatus('error', result.message || '發生未知錯誤');
+      }
+
+    } catch (err) {
+      playSound('error');
+      showStatus('error', '網路連線異常，請檢查 Apps Script 網址與設定');
+      console.error(err);
+    } finally {
+      isSubmitting = false;
+      cardInput.focus();
+    }
+  }
+
+  function showStatus(type, htmlContent) {
+    statusArea.className = 'status-area status-' + type;
+    statusMsg.innerHTML = htmlContent;
+  }
+
+  function addHistory(time, className, classNo, chName, cardId) {
+    historyLogs.unshift({ time, className, classNo, chName, cardId });
+    if (historyLogs.length > 10) historyLogs.pop();
+
+    historyBody.innerHTML = historyLogs.map(item => `
+      <tr>
+        <td>${item.time}</td>
+        <td><span class="badge">${item.className}</span></td>
+        <td>${item.classNo}</td>
+        <td><b>${item.chName}</b></td>
+        <td style="color:#80868b;">${item.cardId}</td>
+      </tr>
+    `).join('');
+  }
+</script>
+
+</body>
+</html>
