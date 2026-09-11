@@ -19,6 +19,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      -webkit-tap-highlight-color: transparent;
     }
     .container {
       width: 100%;
@@ -73,6 +74,9 @@
       letter-spacing: 2px;
       outline: none;
       transition: border-color 0.2s;
+      /* 防止在平板長按選取彈出放大鏡或複製選單 */
+      -webkit-user-select: none;
+      user-select: none;
     }
     input[type="text"]:focus {
       border-color: var(--primary);
@@ -138,7 +142,15 @@
       <button class="btn-sync" onclick="fetchStudentRoster(true)">🔄 強制同步名單</button>
     </div>
 
-    <input type="text" id="cardInput" placeholder="等待感應卡片..." autocomplete="off" autofocus>
+    <!-- 加入 inputmode="none" 阻止 Android / iOS 彈出虛擬螢幕鍵盤 -->
+    <input 
+      type="text" 
+      id="cardInput" 
+      inputmode="none" 
+      placeholder="等待感應卡片 (外接讀卡器)..." 
+      autocomplete="off" 
+      autofocus
+    >
 
     <div id="statusArea" class="status-area status-idle">
       <div id="statusMsg" style="font-size: 18px;">請刷卡</div>
@@ -165,7 +177,7 @@
 </div>
 
 <script>
-  // 🔴 請替換為您的 Web App URL
+  // 🔴 您的 Google Apps Script Web App URL
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyegs1aSfkYDS9PqyTIXFFjOcfZwgJDWz-dwfamWgAddAo6DWAW60XRtTz9sZ45VD49/exec";
 
   const cardInput = document.getElementById('cardInput');
@@ -179,6 +191,9 @@
 
   // 1. 初始化名冊：優先讀取本機快取，若無則向 Apps Script 拉取
   window.addEventListener('DOMContentLoaded', () => {
+    // 確保一進頁面就聚焦在輸入框
+    ensureFocus();
+
     const cachedData = localStorage.getItem('ATTENDANCE_STUDENT_MAP');
     const cachedTime = localStorage.getItem('ATTENDANCE_CACHE_TIME');
 
@@ -209,13 +224,31 @@
     } catch (e) {
       cacheText.innerText = "❌ 無法連線至伺服器同步名單";
       console.error(e);
+    } finally {
+      ensureFocus();
     }
   }
 
-  // 3. 點擊任何地方保持游標在輸入框
-  document.addEventListener('click', () => cardInput.focus());
+  // 3. 行動裝置聚焦控制：防止觸碰時彈出虛擬鍵盤，但確保外接鍵盤/讀卡機輸入不中斷
+  function ensureFocus() {
+    cardInput.focus({ preventScroll: true });
+  }
 
-  // 4. 音效回饋
+  // 點擊任何地方或觸控時保持焦點
+  document.addEventListener('click', (e) => {
+    // 若點擊的是同步按鈕則不強制覆蓋
+    if (!e.target.classList.contains('btn-sync')) {
+      ensureFocus();
+    }
+  });
+
+  // 攔截 touchstart，避免手指直接點擊輸入框時觸發系統叫起軟體鍵盤
+  cardInput.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // 阻止系統原生彈起鍵盤行為
+    ensureFocus();
+  });
+
+  // 4. 音效回饋 (Web Audio API)
   function playSound(type) {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -238,7 +271,7 @@
     } catch(e) {}
   }
 
-  // 5. 監聽條碼槍輸入
+  // 5. 監聽條碼槍/讀卡機輸入 (感應後自動送出 Enter)
   cardInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
       const cardId = this.value.trim();
