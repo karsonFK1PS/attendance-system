@@ -177,7 +177,6 @@
 </div>
 
 <script>
-  // 🔴 您的 Google Apps Script Web App URL
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyegs1aSfkYDS9PqyTIXFFjOcfZwgJDWz-dwfamWgAddAo6DWAW60XRtTz9sZ45VD49/exec";
 
   const cardInput = document.getElementById('cardInput');
@@ -189,66 +188,93 @@
   let studentMap = {};
   let historyLogs = [];
 
-  // 1. 初始化名冊：優先讀取本機快取，若無則向 Apps Script 拉取
+  // 🛡️ 安全存取 localStorage，防止在 App Inventor WebViewer 中崩潰
+  const storage = {
+    get: function(key) {
+      try {
+        return window.localStorage ? window.localStorage.getItem(key) : null;
+      } catch(e) {
+        console.warn("WebViewer 不支援 localStorage，切換為純記憶體模式");
+        return null;
+      }
+    },
+    set: function(key, val) {
+      try {
+        if (window.localStorage) window.localStorage.setItem(key, val);
+      } catch(e) {
+        console.warn("無法寫入 localStorage");
+      }
+    }
+  };
+
+  // 1. 初始化名冊
   window.addEventListener('DOMContentLoaded', () => {
-    // 確保一進頁面就聚焦在輸入框
     ensureFocus();
 
-    const cachedData = localStorage.getItem('ATTENDANCE_STUDENT_MAP');
-    const cachedTime = localStorage.getItem('ATTENDANCE_CACHE_TIME');
+    const cachedData = storage.get('ATTENDANCE_STUDENT_MAP');
+    const cachedTime = storage.get('ATTENDANCE_CACHE_TIME');
 
     if (cachedData) {
-      studentMap = JSON.parse(cachedData);
-      cacheText.innerText = `✅ 本機已快取 ${Object.keys(studentMap).length} 位學生名單 (最後同步：${cachedTime})`;
+      try {
+        studentMap = JSON.parse(cachedData);
+        cacheText.innerText = `✅ 本機已快取 ${Object.keys(studentMap).length} 位學生名單 (最後同步：${cachedTime})`;
+      } catch(e) {
+        fetchStudentRoster();
+      }
     } else {
       fetchStudentRoster();
     }
   });
 
-  // 2. 向 Apps Script 下載全校名冊
+  // 2. 向 Apps Script 下載全校名冊 (加入 redirect: 'follow' 與詳細錯誤回報)
   async function fetchStudentRoster(isManual = false) {
     cacheText.innerText = "⏳ 正在同步 Google Sheets 學生名冊...";
     try {
-      const res = await fetch(SCRIPT_URL);
+      const res = await fetch(SCRIPT_URL, {
+        method: 'GET',
+        redirect: 'follow',
+        cache: 'no-cache'
+      });
+      
+      if (!res.ok) throw new Error("HTTP 狀態碼錯誤: " + res.status);
+
       const json = await res.json();
       if (json.status === 'success') {
         studentMap = json.data;
         const timeNow = new Date().toLocaleTimeString();
-        localStorage.setItem('ATTENDANCE_STUDENT_MAP', JSON.stringify(studentMap));
-        localStorage.setItem('ATTENDANCE_CACHE_TIME', timeNow);
+        storage.set('ATTENDANCE_STUDENT_MAP', JSON.stringify(studentMap));
+        storage.set('ATTENDANCE_CACHE_TIME', timeNow);
         cacheText.innerText = `✅ 已成功同步 ${json.count} 位學生名單 (${timeNow})`;
         if (isManual) alert(`名單同步成功！共載入 ${json.count} 筆學生資料。`);
       } else {
         cacheText.innerText = "❌ 同步失敗：" + json.message;
       }
     } catch (e) {
-      cacheText.innerText = "❌ 無法連線至伺服器同步名單";
+      // 顯示具體錯誤，方便排查是哪裡斷線
+      cacheText.innerText = "❌ 無法連線：" + e.message;
       console.error(e);
     } finally {
       ensureFocus();
     }
   }
 
-  // 3. 行動裝置聚焦控制：防止觸碰時彈出虛擬鍵盤，但確保外接鍵盤/讀卡機輸入不中斷
+  // 3. 行動裝置聚焦控制
   function ensureFocus() {
     cardInput.focus({ preventScroll: true });
   }
 
-  // 點擊任何地方或觸控時保持焦點
   document.addEventListener('click', (e) => {
-    // 若點擊的是同步按鈕則不強制覆蓋
     if (!e.target.classList.contains('btn-sync')) {
       ensureFocus();
     }
   });
 
-  // 攔截 touchstart，避免手指直接點擊輸入框時觸發系統叫起軟體鍵盤
   cardInput.addEventListener('touchstart', (e) => {
-    e.preventDefault(); // 阻止系統原生彈起鍵盤行為
+    e.preventDefault();
     ensureFocus();
   });
 
-  // 4. 音效回饋 (Web Audio API)
+  // 4. 音效回饋
   function playSound(type) {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -271,7 +297,7 @@
     } catch(e) {}
   }
 
-  // 5. 監聽條碼槍/讀卡機輸入 (感應後自動送出 Enter)
+  // 5. 監聽條碼槍/讀卡機輸入
   cardInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
       const cardId = this.value.trim();
@@ -282,7 +308,7 @@
     }
   });
 
-  // 6. 前端即時比對 + 非同步背景寫入
+  // 6. 前端比對 + 背景非同步寫入
   function processCard(cardId) {
     const student = studentMap[cardId];
 
@@ -292,7 +318,6 @@
       return;
     }
 
-    // ⚡ 1 毫秒立刻反映：發出提示音並顯示學生名字
     playSound('success');
     const nowTime = new Date().toTimeString().split(' ')[0];
     showStatus('success', `
@@ -302,7 +327,7 @@
 
     addHistory(nowTime, student.className, student.classNo, student.chName, cardId);
 
-    // 🚀 背景非同步送出寫入請求，完全不阻礙下一位學生刷卡
+    // 送出打卡請求
     fetch(SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
