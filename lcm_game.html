@@ -3,1135 +3,1515 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>鳳溪第一小學 - LCM 疾風競速賽 (AI小狗老師伴學版)</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome 圖示 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>鳳溪第一小學 - LCM 疾風競速賽 (雲端同步版)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
-    @keyframes floatPet {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-6px) rotate(2deg); }
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --success: #10b981;
+      --danger: #ef4444;
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --card-border: rgba(255, 255, 255, 0.2);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
     }
-    @keyframes pulseTarget {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
-      50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans TC', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
     }
-    @keyframes shakeCard {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-8px); }
-      40%, 80% { transform: translateX(8px); }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow-x: hidden;
     }
-    .animate-float {
-      animation: floatPet 2.5s ease-in-out infinite;
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      position: relative;
     }
-    .highlight-target {
-      animation: pulseTarget 1.2s infinite;
+
+    .glass-card {
+      background: var(--card-bg);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--card-border);
+      backdrop-filter: blur(16px);
+      text-align: center;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .school-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+      color: var(--primary-dark);
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 2.1rem;
+      font-weight: 900;
+      color: #1e1b4b;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-bottom: 24px;
+    }
+
+    /* AI 小狗老師 首頁 POPUP Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .popup-box {
+      background: #ffffff;
+      border-radius: 28px;
+      max-width: 520px;
+      width: 100%;
+      padding: 28px 24px;
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+      transform: scale(0.9) translateY(20px);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      border: 4px solid #fef08a;
+    }
+
+    .modal-overlay.active .popup-box {
+      transform: scale(1) translateY(0);
+    }
+
+    .dog-avatar-large {
+      font-size: 5rem;
+      line-height: 1;
+      margin-bottom: 12px;
+      animation: bounceDog 2s infinite ease-in-out;
+      display: inline-block;
+    }
+
+    @keyframes bounceDog {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px) rotate(3deg); }
+    }
+
+    .popup-title {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #92400e;
+      margin-bottom: 12px;
+    }
+
+    .popup-speech-bubble {
+      background: #fffbeb;
+      border: 2px dashed #fcd34d;
+      border-radius: 20px;
+      padding: 16px;
+      font-size: 0.95rem;
+      color: #78350f;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .popup-speech-bubble ul {
+      margin: 8px 0 8px 20px;
+    }
+
+    .popup-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* 輸入高亮導引 */
+    .highlight-guide {
+      animation: pulseBorder 1.5s infinite alternate !important;
       border-color: #f59e0b !important;
+      background: #fffbeb !important;
     }
-    .shake-anim {
-      animation: shakeCard 0.4s ease-in-out;
+
+    @keyframes pulseBorder {
+      0% { box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.4); }
+      100% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.8); }
     }
-    .bar-smooth {
-      transition: width 0.1s linear;
+
+    .input-guide-arrow {
+      color: #d97706;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-top: 6px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #334155;
+      font-size: 0.95rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 14px 18px;
+      font-size: 1.1rem;
+      border: 2px solid #cbd5e1;
+      border-radius: 16px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 16px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #ffffff;
+      box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+      width: 100%;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 24px -5px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn-voice {
+      background: #fef3c7;
+      color: #b45309;
+      border: 2px solid #fde68a;
+      flex: 1;
+    }
+
+    .btn-voice:hover {
+      background: #fde68a;
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #334155;
+      flex: 1;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    /* 答題介面 */
+    #gameScreen {
+      display: none;
+    }
+
+    .hud-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+      padding: 10px 16px;
+      border-radius: 18px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 16px;
+    }
+
+    .hud-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hud-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .hud-val {
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--primary);
+    }
+
+    .combo-badge {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #b45309;
+      background: #fef3c7;
+      padding: 2px 8px;
+      border-radius: 8px;
+      animation: pulseCombo 0.4s ease-out;
+    }
+
+    @keyframes pulseCombo {
+      0% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    /* AI 伴學看板 */
+    .ai-companion {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #f0fdf4;
+      border: 2px solid #bbf7d0;
+      border-radius: 20px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      text-align: left;
+      position: relative;
+    }
+
+    .companion-dog {
+      font-size: 2.2rem;
+      flex-shrink: 0;
+      animation: wagTail 1.5s infinite alternate ease-in-out;
+    }
+
+    @keyframes wagTail {
+      0% { transform: rotate(-6deg); }
+      100% { transform: rotate(6deg); }
+    }
+
+    .companion-bubble {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #166534;
+      line-height: 1.4;
+      flex-grow: 1;
+    }
+
+    .skip-voice-btn {
+      background: #ffffff;
+      border: 1px solid #86efac;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #15803d;
+      border-radius: 10px;
+      cursor: pointer;
+      display: none;
+      white-space: nowrap;
+    }
+
+    .next-step-btn {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #ffffff;
+      border: none;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      border-radius: 12px;
+      cursor: pointer;
+      display: none;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+      white-space: nowrap;
+      animation: pulseNext 1.2s infinite;
+    }
+
+    @keyframes pulseNext {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* 計時進度條 */
+    .timer-wrap {
+      position: relative;
+      background: #e2e8f0;
+      border-radius: 12px;
+      height: 16px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .timer-bar {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #10b981 0%, #f59e0b 70%, #ef4444 100%);
+      border-radius: 12px;
+      transform-origin: left center;
+      transition: transform 0.1s linear;
+    }
+
+    .timer-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-top: 4px;
+      margin-bottom: 12px;
+    }
+
+    .question-box {
+      margin: 16px 0 24px;
+    }
+
+    .question-context {
+      display: inline-block;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: #eff6ff;
+      padding: 4px 12px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+
+    .question-main {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #0f172a;
+    }
+
+    .answers-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .opt-btn {
+      background: #ffffff;
+      border: 3px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 18px;
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #1e293b;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .opt-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: #f8fafc;
+      transform: translateY(-2px);
+    }
+
+    .opt-btn.correct {
+      background: #10b981 !important;
+      border-color: #059669 !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+    }
+
+    .opt-btn.wrong {
+      background: #ef4444 !important;
+      border-color: #dc2626 !important;
+      color: #ffffff !important;
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    /* 卓楠秘技提示 */
+    .hint-container {
+      margin-top: 10px;
+    }
+
+    .hint-trigger-btn {
+      background: #fef3c7;
+      color: #92400e;
+      border: 2px solid #fde68a;
+      border-radius: 12px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .hint-trigger-btn:hover {
+      background: #fde68a;
+    }
+
+    .hint-box {
+      display: none;
+      background: #fffbeb;
+      border: 2px dashed #f59e0b;
+      border-radius: 16px;
+      padding: 12px 16px;
+      font-size: 0.9rem;
+      color: #b45309;
+      text-align: left;
+      margin-top: 10px;
+      line-height: 1.5;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 結算報告畫面 */
+    #resultScreen {
+      display: none;
+    }
+
+    .report-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: left;
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+
+    .report-ai-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+
+    .badge-icon {
+      font-size: 3rem;
+    }
+
+    .badge-info h3 {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #1e1b4b;
+    }
+
+    .badge-tag {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 800;
+      padding: 2px 10px;
+      border-radius: 8px;
+      margin-top: 4px;
+    }
+
+    .report-body {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #334155;
+      margin-bottom: 12px;
+    }
+
+    .report-tip {
+      background: #eff6ff;
+      border-left: 4px solid var(--primary);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #1e40af;
+      font-weight: 600;
+    }
+
+    .score-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 14px;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+    }
+
+    .stat-num {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--primary);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    /* 排行榜 */
+    .leaderboard-wrap {
+      background: #f8fafc;
+      border-radius: 20px;
+      padding: 16px;
+      margin-top: 16px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .lb-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .lb-title {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #1e1b4b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cloud-sync-status {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: #dbeafe;
+      color: #1d4ed8;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .clear-lb-btn {
+      background: none;
+      border: none;
+      color: var(--danger);
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .lb-list {
+      list-style: none;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .lb-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: 12px;
+      margin-bottom: 6px;
+      background: #ffffff;
+      border: 1px solid #f1f5f9;
+      font-size: 0.9rem;
+    }
+
+    .lb-item:nth-child(1) { background: #fef3c7; border-color: #fde68a; font-weight: 800; }
+    .lb-item:nth-child(2) { background: #f1f5f9; border-color: #e2e8f0; font-weight: 700; }
+    .lb-item:nth-child(3) { background: #ffedd5; border-color: #fed7aa; font-weight: 700; }
+
+    .lb-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lb-rank {
+      font-weight: 900;
+      width: 24px;
+      text-align: center;
+    }
+
+    .lb-score {
+      font-weight: 900;
+      color: var(--primary);
+    }
+
+    footer {
+      margin-top: 24px;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.6);
+      text-align: center;
     }
   </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-950 via-slate-900 to-sky-950 min-h-screen text-slate-800 flex flex-col justify-between p-3 sm:p-5 select-none font-sans">
+<body>
 
-  <!-- 頂部學校抬頭 -->
-  <header class="w-full max-w-xl mx-auto flex items-center justify-between bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/15 text-white shadow-lg mb-3">
-    <div class="flex items-center gap-2.5">
-      <div class="w-9 h-9 rounded-xl bg-amber-400 text-indigo-950 flex items-center justify-center font-black text-lg shadow">
-        <i class="fa-solid fa-graduation-cap"></i>
+  <!-- 首頁 POPUP AI 小狗老師引導 Modal -->
+  <div class="modal-overlay" id="introModal">
+    <div class="popup-box">
+      <div class="dog-avatar-large">🐶</div>
+      <h2 class="popup-title">歡迎來到 LCM 疾風競速賽！</h2>
+      <div class="popup-speech-bubble">
+        <p><strong>汪汪！我是你的課堂 AI 小狗老師！</strong></p>
+        <p>準備好挑戰最小公倍數（L.C.M.）了嗎？規則好簡單：</p>
+        <ul>
+          <li>全卷會隨機抽選 <strong>10 題</strong> 對決！</li>
+          <li>每題有 <strong>15 秒</strong>，越快答對分數越高！</li>
+          <li>遇到難題可以看「卓楠提示」，但會扣除 80 分喔！</li>
+        </ul>
+        <p><strong>小狗老師會全程陪同你一齊作答，加油！</strong></p>
       </div>
-      <div>
-        <h1 class="text-sm sm:text-base font-black tracking-wide flex items-center gap-1.5">
-          <span>鳳溪第一小學</span>
-          <span class="text-[10px] bg-amber-400/90 text-slate-950 font-black px-1.5 py-0.5 rounded-md">小四數學</span>
-        </h1>
-        <p class="text-[11px] text-indigo-200">最小公倍數 (L.C.M.) 疾風挑戰賽</p>
-      </div>
-    </div>
-    <div class="flex items-center gap-2">
-      <button id="toggleAudioBtn" class="text-xs bg-white/15 hover:bg-white/25 px-2.5 py-1.5 rounded-xl text-white font-bold transition flex items-center gap-1.5 border border-white/10">
-        <i class="fa-solid fa-volume-high" id="audioIcon"></i>
-        <span id="audioStatusText">音效開</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- 主內容容器 -->
-  <main class="w-full max-w-xl mx-auto flex-1 flex flex-col justify-center">
-
-    <!-- 1. 登記與開始畫面 (Start View) -->
-    <div id="viewStart" class="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-indigo-200 text-center relative overflow-hidden">
-      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-indigo-50 border border-indigo-200 rounded-full text-xs font-black text-indigo-800 mb-3">
-        <i class="fa-solid fa-bolt text-amber-500"></i>
-        <span>20 題庫隨機抽選 10 題 • 15 秒速答制</span>
-      </div>
-
-      <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-2">
-        LCM 疾風競速大賽
-      </h2>
-      <p class="text-xs sm:text-sm text-slate-500 font-semibold mb-6">
-        配合課本情境，活用「先列較大數倍數」秘技衝擊排行榜！
-      </p>
-
-      <!-- 登記表單 -->
-      <div class="space-y-4 text-left">
-        <div>
-          <label for="studentNameInput" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-            <span>參賽者班別、學號及姓名：</span>
-            <span id="guideArrowBadge" class="hidden text-[11px] bg-amber-400 text-amber-950 font-black px-2 py-0.5 rounded-full animate-bounce">
-              👈 請喺度輸入！
-            </span>
-          </label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <i class="fa-solid fa-user-astronaut"></i>
-            </span>
-            <input 
-              type="text" 
-              id="studentNameInput" 
-              placeholder="例：4A (12) 陳小明" 
-              maxlength="20"
-              class="w-full pl-10 pr-4 py-3.5 bg-slate-50 border-2 border-indigo-200 rounded-2xl text-slate-900 font-bold focus:outline-none focus:border-indigo-600 focus:bg-white text-base transition"
-            >
-          </div>
-          <p id="nameErrorAlert" class="hidden text-rose-500 text-xs font-bold mt-1.5 pl-1">
-            ⚠️ 請先輸入班別、學號及姓名再開始競賽！
-          </p>
-        </div>
-
-        <button 
-          id="btnStartGame"
-          type="button"
-          class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <span>開始競賽衝刺 🚀</span>
-        </button>
-      </div>
-
-      <!-- 快捷鏈接 -->
-      <div class="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold">
-        <button id="btnReopenDogModal" type="button" class="text-amber-600 hover:text-amber-700 flex items-center gap-1.5">
-          <span>🐶 AI 小狗老師規則講解</span>
-        </button>
-        <button id="btnOpenLeaderboard" type="button" class="text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
-          <i class="fa-solid fa-trophy text-amber-400"></i>
-          <span>查看榮譽排行榜</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- 2. 答題中競賽畫面 (Game View) -->
-    <div id="viewGame" class="hidden bg-white rounded-3xl p-5 sm:p-7 shadow-2xl border-4 border-indigo-300 flex flex-col relative overflow-hidden">
-      
-      <!-- 頂部 HUD -->
-      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
-        <div class="flex items-center gap-2">
-          <span class="bg-indigo-600 text-white font-black text-xs px-2.5 py-1 rounded-xl">
-            題目 <span id="hudIndex">1</span> / 10
-          </span>
-          <span id="hudPlayerName" class="text-xs font-black text-slate-600 max-w-[120px] truncate">
-            ---
-          </span>
-        </div>
-
-        <div class="flex items-center gap-2.5">
-          <div id="comboBadge" class="hidden bg-gradient-to-r from-rose-500 to-amber-500 text-white font-black text-xs px-2.5 py-0.5 rounded-full shadow animate-pulse">
-            COMBO x<span id="comboNumber">0</span>
-          </div>
-          <div class="text-right">
-            <span class="text-[10px] text-slate-400 font-bold block uppercase leading-none">分數</span>
-            <span id="hudScore" class="text-2xl font-black text-amber-500">0</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- AI 小狗伴學懸浮對話框 -->
-      <div class="my-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl flex items-center gap-3 shadow-sm">
-        <div class="text-3xl animate-float select-none">🐶</div>
-        <div class="flex-1">
-          <div class="flex items-center gap-1.5 mb-0.5">
-            <span class="text-[10px] font-black text-amber-900 bg-amber-200 px-2 py-0.5 rounded-full">AI 小狗老師</span>
-            <span id="dogStatusTag" class="text-[11px] font-bold text-amber-700">伴學中</span>
-          </div>
-          <p id="dogDialogue" class="text-xs sm:text-sm font-black text-slate-800 leading-tight">
-            小狗老師陪緊你一齊作答，加油！
-          </p>
-        </div>
-      </div>
-
-      <!-- 計時條 HUD -->
-      <div class="mb-4">
-        <div class="flex items-center justify-between text-xs font-bold mb-1">
-          <div class="flex items-center gap-2">
-            <span id="timerStatusLabel" class="text-slate-500 flex items-center gap-1">
-              <i class="fa-regular fa-clock"></i>
-              <span>速答剩餘：</span>
-            </span>
-            <button id="btnSkipVoice" type="button" class="hidden bg-amber-100 hover:bg-amber-200 text-amber-900 text-[11px] font-black px-2 py-0.5 rounded-md border border-amber-300">
-              跳過語音 ⚡
-            </button>
-          </div>
-          <span id="timerText" class="font-black text-indigo-900">15.0s</span>
-        </div>
-        <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
-          <div id="timerBar" class="h-full bg-emerald-500 rounded-full bar-smooth w-full"></div>
-        </div>
-      </div>
-
-      <!-- 核心問題卡片 -->
-      <div class="bg-indigo-50/70 border-2 border-indigo-200 rounded-2xl p-4 text-center mb-4">
-        <p class="text-xs font-bold text-indigo-600 mb-1" id="questionCategory">最小公倍數 (L.C.M.)</p>
-        <div class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight my-1" id="questionMathExpression">
-          求 4 和 6 的最小公倍數
-        </div>
-        <p class="text-xs text-slate-500 font-semibold" id="questionSubtext">請點選下方正確答案：</p>
-      </div>
-
-      <!-- 四選一按鈕 -->
-      <div class="grid grid-cols-2 gap-3 mb-4" id="choicesContainer"></div>
-
-      <!-- 即時反饋訊息條 -->
-      <div id="feedbackBanner" class="hidden mb-3 p-2.5 rounded-xl text-center text-xs sm:text-sm font-black transition"></div>
-
-      <!-- 答題後下一題操作欄 -->
-      <div id="nextQuestionActionBar" class="hidden mb-3 flex items-center justify-between p-2.5 bg-indigo-50 border-2 border-indigo-300 rounded-2xl shadow-sm">
-        <div class="flex items-center gap-2 text-xs font-bold text-indigo-900">
-          <span class="animate-pulse text-amber-500 text-sm">📢</span>
-          <span id="nextQuestionWaitHint">AI 小狗老師說話中...說完自動進入下一題</span>
-        </div>
-        <button 
-          id="btnManualNextQuestion" 
-          type="button" 
-          class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-black text-xs sm:text-sm rounded-xl shadow transition transform active:scale-95 flex items-center gap-1.5 cursor-pointer"
-        >
-          <span>下一題 ➔</span>
-        </button>
-      </div>
-
-      <!-- 卓楠秘技（小提示）區域 -->
-      <div class="mt-auto pt-2 border-t border-slate-100 flex flex-col gap-2">
-        <div class="flex items-center justify-between">
-          <button 
-            id="btnUseHint"
-            type="button"
-            class="text-xs bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 font-black px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm"
-          >
-            <i class="fa-solid fa-lightbulb text-amber-500"></i>
-            <span>卓楠秘技提示 (每次扣 80 分)</span>
-          </button>
-          <span id="hintUsedNotice" class="hidden text-[11px] text-rose-500 font-bold">已扣 80 分</span>
-        </div>
-
-        <div id="hintContentBox" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-slate-700">
-          <p class="font-bold text-amber-900 mb-1 flex items-center gap-1">
-            <i class="fa-solid fa-paw"></i>
-            <span>柴犬秘技指引：</span>
-          </p>
-          <p id="hintTextDetail" class="leading-relaxed font-semibold">---</p>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- 3. 比賽結算畫面 (Result View) -->
-    <div id="viewResult" class="hidden bg-white rounded-3xl p-5 sm:p-7 shadow-2xl border-4 border-emerald-400 text-center relative overflow-hidden">
-      <div id="resultBadgeIcon" class="w-16 h-16 mx-auto rounded-2xl bg-amber-100 border-2 border-amber-300 text-amber-600 flex items-center justify-center text-3xl mb-2 shadow-inner">
-        🏆
-      </div>
-      <div class="inline-block px-3 py-1 bg-amber-100 text-amber-900 border border-amber-300 rounded-full text-xs font-black mb-1.5" id="resultTierTitle">
-        🏆「疾風數感大師」
-      </div>
-      <h2 class="text-xl sm:text-2xl font-black text-slate-900 mb-0.5">挑戰完成！學力統計報告</h2>
-      <p id="resultPlayerGreeting" class="text-xs font-bold text-indigo-700 mb-3">選手：---</p>
-
-      <!-- AI 小狗老師語音總結報告卡 -->
-      <div class="p-3.5 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border-2 border-amber-300 rounded-2xl text-left mb-3.5 shadow-sm">
-        <div class="flex items-center justify-between mb-1.5">
-          <div class="flex items-center gap-2">
-            <span class="text-2xl animate-float">🐶</span>
-            <span class="text-xs font-black text-amber-900">AI 小狗老師智能點評</span>
-          </div>
-          <button id="btnReplayReportSpeech" type="button" class="text-[11px] bg-amber-200/90 hover:bg-amber-300 text-amber-950 font-black px-2.5 py-1 rounded-lg transition flex items-center gap-1">
-            <i class="fa-solid fa-volume-high"></i>
-            <span>重聽小狗評語</span>
-          </button>
-        </div>
-        <p id="dogReportAnalysisText" class="text-xs font-bold text-slate-800 leading-relaxed mb-2">
-          ---
-        </p>
-        <div class="p-2 bg-white/80 rounded-xl border border-amber-200 text-[11px] text-amber-900 font-semibold flex items-start gap-1.5">
-          <span class="text-amber-500 font-black">💡</span>
-          <span id="dogReportTipText">---</span>
-        </div>
-      </div>
-
-      <!-- 成績數據面板 -->
-      <div class="grid grid-cols-2 gap-2.5 mb-4 text-left">
-        <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-2.5">
-          <span class="text-[10px] font-bold text-slate-500 block">最終得分</span>
-          <span id="resultFinalScore" class="text-2xl font-black text-amber-500">0</span>
-        </div>
-        <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-2.5">
-          <span class="text-[10px] font-bold text-slate-500 block">答對題數</span>
-          <span id="resultAccuracy" class="text-2xl font-black text-emerald-600">0 / 10</span>
-        </div>
-        <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-2.5">
-          <span class="text-[10px] font-bold text-slate-500 block">最高連擊 (Combo)</span>
-          <span id="resultMaxCombo" class="text-xl font-black text-rose-500">x0</span>
-        </div>
-        <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-2.5">
-          <span class="text-[10px] font-bold text-slate-500 block">總耗時 / 平均</span>
-          <span id="resultTotalTime" class="text-xl font-black text-slate-800">0s</span>
-        </div>
-      </div>
-
-      <!-- 按鈕操作組 -->
-      <div class="flex flex-col sm:flex-row gap-2">
-        <button id="btnPlayAgain" type="button" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-sm transition shadow-md active:scale-95">
-          再挑戰一次 🔁
-        </button>
-        <button id="btnShowBoardFromResult" type="button" class="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-sm transition shadow-md active:scale-95">
-          榮譽排行榜 🏆
-        </button>
-      </div>
-    </div>
-
-  </main>
-
-  <!-- 底部版權 -->
-  <footer class="w-full max-w-xl mx-auto text-center text-[11px] text-indigo-200/80 font-medium py-2">
-    鳳溪第一小學 • 數學科互動智慧教室
-  </footer>
-
-  <!-- ==================== POPUP 彈窗組 ==================== -->
-
-  <!-- POPUP 1: AI 小狗老師首頁歡迎與規則導覽 -->
-  <div id="modalDogWelcome" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border-4 border-amber-400 text-center relative overflow-hidden">
-      
-      <div class="w-20 h-20 mx-auto bg-amber-100 border-4 border-amber-400 rounded-full flex items-center justify-center text-4xl shadow-md mb-2 animate-float">
-        🐶
-      </div>
-      <span class="inline-block px-3 py-1 bg-amber-400 text-amber-950 font-black rounded-full text-xs mb-1 shadow-sm">
-        汪汪！我係你嘅 AI 小狗老師 🐾
-      </span>
-      <h3 class="text-xl sm:text-2xl font-black text-slate-900">歡迎來到 LCM 疾風競速賽！</h3>
-
-      <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 my-4 text-left text-xs sm:text-sm text-slate-700 space-y-2">
-        <p class="font-black text-amber-900">📢 遊戲規則與速算指南：</p>
-        <p class="leading-relaxed">
-          1. 系統將從 20 題題庫隨機挑選 <strong>10 題</strong>挑戰。<br>
-          2. 每題有 <strong>15 秒速答倒數</strong>，答得越快，分數越高！<br>
-          3. 連續答啱會獲得 <strong>Combo 翻倍加成</strong>！卡住時可使用「卓楠秘技」。<br>
-          4. <strong>小狗老師會全程陪同你一齊作答</strong>，加油！
-        </p>
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <button 
-          id="btnWelcomeListenVoice" 
-          type="button" 
-          class="w-full py-3 bg-amber-100 hover:bg-amber-200 text-amber-950 font-black text-sm rounded-xl border-2 border-amber-300 transition flex items-center justify-center gap-1.5"
-        >
-          <i class="fa-solid fa-volume-high text-amber-600"></i>
-          <span>🔊 聽小狗老師語音講解</span>
-        </button>
-        <button 
-          id="btnWelcomeConfirm" 
-          type="button" 
-          class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-base rounded-2xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <span>明白，前往輸入姓名 🚀</span>
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- POPUP 2: 榮譽排行榜 -->
-  <div id="modalLeaderboard" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-5 sm:p-7 max-w-md w-full shadow-2xl border-4 border-indigo-400 flex flex-col max-h-[85vh]">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
-        <h3 class="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
-          <i class="fa-solid fa-trophy text-amber-400"></i>
-          <span>鳳溪第一小學 • 英雄榜 (Top 10)</span>
-        </h3>
-        <button id="btnCloseBoard" type="button" class="text-slate-400 hover:text-slate-600 text-lg p-1">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div class="flex-1 overflow-y-auto my-3 pr-1 space-y-2" id="leaderboardList"></div>
-
-      <div class="pt-3 border-t border-slate-200 flex items-center justify-between gap-2">
-        <button id="btnResetBoard" type="button" class="text-xs text-rose-500 hover:text-rose-700 font-bold px-2 py-1">
-          清空榜單 (老師專用)
-        </button>
-        <button id="btnDismissBoard" type="button" class="px-5 py-2.5 bg-indigo-600 text-white font-black rounded-xl text-xs">
-          關閉
-        </button>
+      <div class="popup-actions">
+        <button type="button" class="btn btn-voice" id="modalSpeakBtn">🔊 聽小狗老師講解</button>
+        <button type="button" class="btn btn-primary" id="modalCloseBtn" style="flex: 1;">前往輸入姓名 ➔</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== JavaScript 程式邏輯 ==================== -->
+  <div class="container">
+    <div class="glass-card">
+      
+      <!-- 畫面一：登錄歡迎卡片 -->
+      <div id="startScreen">
+        <div class="school-badge">🏫 鳳溪第一小學 · 數學科探競速</div>
+        <h1>LCM 疾風競速大賽</h1>
+        <p class="subtitle">考考你的數感反應！先列大數倍數，誰能登上風雲榜首？</p>
+
+        <form id="loginForm" autocomplete="off">
+          <div class="form-group">
+            <label for="playerName">參賽者姓名與班別：</label>
+            <input type="text" id="playerName" placeholder="例如：4A 陳大文" maxlength="15" required>
+            <div class="input-guide-arrow" id="inputGuideArrow">👆 請在此輸入你的班別與姓名！</div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="startBtn">🚀 立即啟動競賽！</button>
+        </form>
+
+        <div class="leaderboard-wrap" style="margin-top: 24px;">
+          <div class="lb-header">
+            <div class="lb-title">
+              🏆 全級榮譽風雲榜 
+              <span class="cloud-sync-status" id="cloudStatusBadge">☁️ 雲端同步中</span>
+            </div>
+            <button type="button" class="clear-lb-btn" id="clearLbBtn">清空榜單 (密碼)</button>
+          </div>
+          <ul class="lb-list" id="globalLeaderboardList">
+            <li class="lb-item" style="justify-content:center; color:#64748b;">榜單載入中...</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 畫面二：答題卡片 -->
+      <div id="gameScreen">
+        <!-- 頂部 HUD -->
+        <div class="hud-bar">
+          <div class="hud-item">
+            <span class="hud-label">選手</span>
+            <span class="hud-val" id="hudPlayer" style="font-size: 0.95rem;">-</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">題號</span>
+            <span class="hud-val" id="hudProgress">1 / 10</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">得分</span>
+            <span class="hud-val" id="hudScore">0</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">連擊</span>
+            <span class="combo-badge" id="hudCombo">x0 連擊</span>
+          </div>
+        </div>
+
+        <!-- AI 小狗伴學看板 -->
+        <div class="ai-companion">
+          <div class="companion-dog" id="companionDogIcon">🐶</div>
+          <div class="companion-bubble" id="companionBubbleText">小狗老師正為你準備題目...</div>
+          <button type="button" class="skip-voice-btn" id="skipVoiceBtn">跳過語音 ⚡</button>
+          <button type="button" class="next-step-btn" id="manualNextBtn">下一題 ➔</button>
+        </div>
+
+        <!-- 計時進度條 -->
+        <div class="timer-wrap">
+          <div class="timer-bar" id="timerBar"></div>
+        </div>
+        <div class="timer-info">
+          <span id="timerStatusText">剩餘時間獎勵</span>
+          <span id="timerSecondsText">15.0s</span>
+        </div>
+
+        <!-- 題目區域 -->
+        <div class="question-box">
+          <div class="question-context" id="qContext">跑步訓練情境題</div>
+          <div class="question-main" id="qTitle">請找出 4 和 6 的最小公倍數</div>
+        </div>
+
+        <!-- 選項按鈕 -->
+        <div class="answers-grid" id="optionsGrid"></div>
+
+        <!-- 卓楠秘技提示 -->
+        <div class="hint-container">
+          <button type="button" class="hint-trigger-btn" id="hintTriggerBtn">💡 呼叫卓楠秘技提示（扣 80 分）</button>
+          <div class="hint-box" id="hintBox"></div>
+        </div>
+      </div>
+
+      <!-- 畫面三：結算統計報告 -->
+      <div id="resultScreen">
+        <div class="school-badge">鳳溪第一小學 · 挑戰結算</div>
+        <h2 style="font-size: 1.8rem; font-weight: 900; margin-bottom: 16px;">🏁 競速挑戰完成！</h2>
+
+        <!-- 數據統計 -->
+        <div class="score-stats-grid">
+          <div class="stat-box">
+            <div class="stat-num" id="resScore">0</div>
+            <div class="stat-label">最終總分</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" id="resAccuracy">0/10</div>
+            <div class="stat-label">答對題數</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" id="resAvgTime">0s</div>
+            <div class="stat-label">平均答題耗時</div>
+          </div>
+        </div>
+
+        <!-- AI 小狗老師多維度結算診斷報告 -->
+        <div class="report-card">
+          <div class="report-ai-header">
+            <div class="badge-icon" id="resBadgeIcon">🏆</div>
+            <div class="badge-info">
+              <h3 id="resBadgeTitle">疾風數感大師</h3>
+              <div class="badge-tag" id="resBadgeTag" style="background:#fef3c7; color:#92400e;">特優表現</div>
+            </div>
+          </div>
+          <div class="report-body" id="resReportText">
+            報告生成中...
+          </div>
+          <div class="report-tip" id="resTipText">
+            💡 小狗老師進階小貼士：...
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:16px;">
+          <button type="button" class="btn btn-voice" id="reVoiceBtn" style="flex:1;">🔊 重聽小狗評語</button>
+          <button type="button" class="btn btn-primary" id="restartBtn" style="flex:1;">🔄 再挑戰一次</button>
+        </div>
+
+        <!-- 排行榜檢視 -->
+        <div class="leaderboard-wrap">
+          <div class="lb-header">
+            <div class="lb-title">🏆 最新榮譽風雲榜 (Top 10)</div>
+          </div>
+          <ul class="lb-list" id="resultLeaderboardList"></ul>
+        </div>
+      </div>
+
+    </div>
+    <footer>鳳溪第一小學 數學與科技探究課程 · 專屬競賽應用</footer>
+  </div>
+
   <script>
-    /* -------------------------------------------------------------
-     * 1. 題庫設計 (20 題嚴選 LCM 題庫)
-     * ------------------------------------------------------------- */
+    /* =========================================================
+       1. 雲端後端 Google Apps Script 整合網址
+       ========================================================= */
+    const CLOUD_API_URL = "https://script.google.com/macros/s/AKfycbz5lqpNoOFkjTOqP9A-sf7bymK0BqIIlpSl7_pRMURG090E-_KYY3gtvaPTmoXdtW7S/exec";
+
+    /* =========================================================
+       2. 題庫資源 (20 題，隨機挑選 10 題)
+       ========================================================= */
     const QUESTION_BANK = [
-      { a: 4, b: 6, hint: "先列較大數 6 的倍數：6, 12... 發現 12 也是 4 的倍數！" },
-      { a: 6, b: 9, hint: "先列較大數 9 的倍數：9, 18... 發現 18 也是 6 的倍數！" },
-      { a: 2, b: 5, hint: "2 和 5 都是質數，最小公倍數就是它們的相乘 (2 × 5)！" },
-      { a: 8, b: 14, hint: "課本卓楠題！先列 14 的倍數：14, 28, 42, 56... 56 是 8 的倍數！" },
-      { a: 9, b: 15, hint: "先列較大數 15 的倍數：15, 30, 45... 45 剛好是 9 的倍數！" },
-      { a: 3, b: 4, hint: "3 和 4 互質，最小公倍數直接相乘：3 × 4 = 12！" },
-      { a: 4, b: 8, hint: "8 本身就是 4 的倍數，所以最小公倍數就是 8！" },
-      { a: 6, b: 8, hint: "先列較大數 8 的倍數：8, 16, 24... 24 也是 6 的倍數！" },
-      { a: 5, b: 10, hint: "較大數 10 已經是 5 的倍數，最小公倍數正是 10！" },
-      { a: 6, b: 15, hint: "先列 15 的倍數：15, 30... 30 正好是 6 的倍數！" },
-      { a: 7, b: 14, hint: "14 本身是 7 的倍數，最小公倍數就是 14！" },
-      { a: 10, b: 15, hint: "先列較大數 15 的倍數：15, 30... 30 是 10 的倍數！" },
-      { a: 12, b: 18, hint: "先列 18 的倍數：18, 36... 36 也是 12 的倍數！" },
-      { a: 4, b: 10, hint: "先列較大數 10 的倍數：10, 20... 20 是 4 的倍數！" },
-      { a: 8, b: 12, hint: "先列 12 的倍數：12, 24... 24 剛好也是 8 的倍數！" },
-      { a: 3, b: 7, hint: "3 和 7 都係質數，直接相乘：3 × 7 = 21！" },
-      { a: 9, b: 12, hint: "先列 12 的倍數：12, 24, 36... 36 是 9 的倍數！" },
-      { a: 6, b: 10, hint: "先列 10 的倍數：10, 20, 30... 30 也是 6 的倍數！" },
-      { a: 5, b: 8, hint: "5 和 8 互質，最小公倍數是 5 × 8 = 40！" },
-      { a: 12, b: 16, hint: "先列 16 的倍數：16, 32, 48... 48 是 12 的倍數！" }
+      { a: 4, b: 6, ans: 12, options: [8, 12, 18, 24], tip: "先列較大的數 6 的倍數：6、12... 12 也是 4 的倍數，所以是 12！" },
+      { a: 6, b: 9, ans: 18, options: [12, 18, 27, 36], tip: "先列較大的數 9 的倍數：9、18... 18 剛好是 6 的倍數！" },
+      { a: 2, b: 5, ans: 10, options: [7, 10, 15, 20], tip: "2 和 5 是質數（互質），最小公倍數直接將兩數相乘：2 × 5 = 10！" },
+      { a: 8, b: 14, ans: 56, options: [28, 48, 56, 112], tip: "像卓楠一樣先列 14 的倍數：14、28、42、56... 56 是 8 的倍數！" },
+      { a: 9, b: 15, ans: 45, options: [30, 45, 60, 90], tip: "先列較大數 15 的倍數：15、30、45... 45 也是 9 的倍數！" },
+      { a: 3, b: 4, ans: 12, options: [6, 9, 12, 24], tip: "3 和 4 是相鄰數（互質），兩數相乘就是 12！" },
+      { a: 5, b: 10, ans: 10, options: [10, 15, 20, 50], tip: "大數 10 本身就是較小數 5 的倍數，所以最小公倍數直接就是 10！" },
+      { a: 4, b: 8, ans: 8, options: [4, 8, 16, 24], tip: "8 是 4 的倍數，因此兩數的 L.C.M. 就是較大的數 8！" },
+      { a: 6, b: 8, ans: 24, options: [16, 24, 32, 48], tip: "先看 8 的倍數：8、16、24... 24 剛好是 6 的倍數！" },
+      { a: 3, b: 7, ans: 21, options: [14, 21, 28, 35], tip: "3 和 7 都是質數，直接相乘：3 × 7 = 21！" },
+      { a: 10, b: 15, ans: 30, options: [20, 30, 45, 60], tip: "先列 15 的倍數：15、30... 30 剛好也是 10 的倍數！" },
+      { a: 4, b: 10, ans: 20, options: [16, 20, 30, 40], tip: "先列較大的數 10 的倍數：10、20... 20 是 4 的倍數！" },
+      { a: 6, b: 15, ans: 30, options: [18, 30, 45, 60], tip: "先看 15 的倍數：15、30... 30 剛好可以被 6 整除！" },
+      { a: 7, b: 8, ans: 56, options: [42, 48, 56, 64], tip: "7 和 8 是相鄰整數，直接將兩數相乘：7 × 8 = 56！" },
+      { a: 9, b: 12, ans: 36, options: [24, 36, 48, 72], tip: "先看 12 的倍數：12、24、36... 36 同時是 9 的倍數！" },
+      { a: 8, b: 12, ans: 24, options: [16, 24, 32, 48], tip: "先列 12 的倍數：12、24... 24 剛好也是 8 的倍數！" },
+      { a: 12, b: 15, ans: 60, options: [30, 45, 60, 90], tip: "列出 15 的倍數：15、30、45、60... 60 是 12 的倍數！" },
+      { a: 5, b: 8, ans: 40, options: [20, 30, 40, 45], tip: "5 和 8 互質，最小公倍數直接相乘：5 × 8 = 40！" },
+      { a: 6, b: 10, ans: 30, options: [20, 30, 40, 60], tip: "先看 10 的倍數：10、20、30... 30 是 6 的倍數！" },
+      { a: 7, b: 14, ans: 14, options: [7, 14, 21, 28], tip: "14 本身就是 7 的倍數，所以 L.C.M. 就是 14！" }
     ];
 
-    /* -------------------------------------------------------------
-     * 2. 安全音效與語音播放引擎
-     * ------------------------------------------------------------- */
-    let isSoundOn = true;
-    let audioCtx = null;
+    /* =========================================================
+       3. 語音庫與音效合成引擎 (Web Audio / Speech)
+       ========================================================= */
+    const PRAISES = [
+      "好犀利啊！反應好快，連擊分數飆升！",
+      "答得非常漂亮！先列大數倍數果然最快！",
+      "太棒了！運算思維敏捷，繼續保持！",
+      "正中目標！小狗老師都為你鼓掌！"
+    ];
 
-    function getAudioContext() {
+    const ENCOURAGEMENTS = [
+      "唔緊要，深呼吸！記住卓楠秘技：先列大數倍數！",
+      "差少少咋！小狗老師陪住你，下一題一定追返！",
+      "保持冷靜！慢慢思考倍數關係，你可以的！",
+      "失敗乃成功之母，下一題看準再出擊！"
+    ];
+
+    let audioCtx = null;
+    function initAudio() {
       if (!audioCtx) {
         try {
-          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-          if (AudioContextClass) audioCtx = new AudioContextClass();
-        } catch(e) {
-          audioCtx = null;
-        }
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch(e) { console.log(e); }
       }
       if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume().catch(() => {});
+        audioCtx.resume();
       }
-      return audioCtx;
     }
 
-    function playTone(freq, type, duration, delay = 0) {
-      if (!isSoundOn) return;
+    function playTone(freq, duration, type='sine') {
       try {
-        const ctx = getAudioContext();
-        if (!ctx) return;
-        setTimeout(() => {
-          try {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, ctx.currentTime);
-            gain.gain.setValueAtTime(0.12, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + duration);
-          } catch(err) {}
-        }, delay);
+        initAudio();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
       } catch(e) {}
     }
 
-    const Sound = {
-      correct: () => {
-        playTone(523.25, 'triangle', 0.12, 0);
-        playTone(659.25, 'triangle', 0.15, 80);
-        playTone(783.99, 'triangle', 0.25, 160);
-      },
-      wrong: () => {
-        playTone(300, 'sawtooth', 0.15, 0);
-        playTone(220, 'sawtooth', 0.3, 100);
-      },
-      hint: () => {
-        playTone(880, 'sine', 0.1, 0);
-      },
-      finish: () => {
-        playTone(523.25, 'triangle', 0.15, 0);
-        playTone(659.25, 'triangle', 0.15, 120);
-        playTone(783.99, 'triangle', 0.15, 240);
-        playTone(1046.50, 'triangle', 0.4, 360);
+    function playSound(name) {
+      if (name === 'correct') {
+        playTone(523.25, 0.1);
+        setTimeout(() => playTone(659.25, 0.1), 100);
+        setTimeout(() => playTone(783.99, 0.25), 200);
+      } else if (name === 'wrong') {
+        playTone(220, 0.15, 'sawtooth');
+        setTimeout(() => playTone(180, 0.25, 'sawtooth'), 150);
+      } else if (name === 'hint') {
+        playTone(440, 0.1, 'triangle');
       }
-    };
+    }
 
-    let activeSpeechTimeout = null;
-
-    function safeCancelSpeech() {
-      if (activeSpeechTimeout) {
-        clearTimeout(activeSpeechTimeout);
-        activeSpeechTimeout = null;
+    let activeUtterance = null;
+    function speakText(text, onEndCallback = null) {
+      if (!('speechSynthesis' in window)) {
+        if (onEndCallback) onEndCallback();
+        return;
       }
       try {
-        if ('speechSynthesis' in window && window.speechSynthesis) {
-          window.speechSynthesis.cancel();
+        window.speechSynthesis.cancel();
+        const ut = new SpeechSynthesisUtterance(text);
+        ut.lang = 'zh-HK';
+        ut.rate = 1.05;
+        activeUtterance = ut;
+
+        let hasCalled = false;
+        const complete = () => {
+          if (!hasCalled) {
+            hasCalled = true;
+            if (onEndCallback) onEndCallback();
+          }
+        };
+
+        ut.onend = complete;
+        ut.onerror = complete;
+        window.speechSynthesis.speak(ut);
+
+        // 8秒超時保底，避免因載具異常掛起
+        setTimeout(complete, 8000);
+      } catch(e) {
+        if (onEndCallback) onEndCallback();
+      }
+    }
+
+    /* =========================================================
+       4. 排行榜數據處理 (Google Sheets API + LocalStorage 備用)
+       ========================================================= */
+    const LOCAL_LB_KEY = "fk1ps_lcm_records";
+    let cachedLeaderboard = [];
+
+    async function fetchLeaderboard() {
+      const statusBadge = document.getElementById("cloudStatusBadge");
+      try {
+        if (statusBadge) statusBadge.innerText = "☁️ 雲端載入中...";
+        const resp = await fetch(CLOUD_API_URL + "?t=" + Date.now());
+        const res = await resp.json();
+        if (res.status === "success" && Array.isArray(res.data)) {
+          cachedLeaderboard = res.data;
+          if (statusBadge) statusBadge.innerText = "☁️ 雲端已連線";
+          renderLeaderboard();
+          return;
         }
-      } catch(e) {}
+      } catch (err) {
+        console.warn("無法取得雲端數據，切換至本機備份：", err);
+      }
+      // 離線回退
+      if (statusBadge) statusBadge.innerText = "💾 本機模式";
+      loadLocalLeaderboard();
+      renderLeaderboard();
     }
 
-    function speakText(text, onEndedCallback) {
-      if (!isSoundOn || !('speechSynthesis' in window) || !window.speechSynthesis) {
-        if (onEndedCallback) onEndedCallback();
+    function loadLocalLeaderboard() {
+      try {
+        const raw = localStorage.getItem(LOCAL_LB_KEY);
+        cachedLeaderboard = raw ? JSON.parse(raw) : [];
+      } catch(e) {
+        cachedLeaderboard = [];
+      }
+    }
+
+    async function recordScoreToCloud(entry) {
+      // 本機先備份
+      try {
+        let local = [];
+        const raw = localStorage.getItem(LOCAL_LB_KEY);
+        if (raw) local = JSON.parse(raw);
+        local.push(entry);
+        local.sort((a,b) => b.score - a.score || a.time - b.time);
+        localStorage.setItem(LOCAL_LB_KEY, JSON.stringify(local.slice(0, 10)));
+      } catch(e) {}
+
+      // 發送至 Apps Script Web App
+      try {
+        await fetch(CLOUD_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(entry)
+        });
+      } catch (err) {
+        console.error("雲端成績發送失敗：", err);
+      }
+      // 重新整理
+      await fetchLeaderboard();
+    }
+
+    async function clearLeaderboardWithPassword() {
+      const pwd = prompt("請輸入管理員密碼以清空排行榜：");
+      if (!pwd) return;
+
+      if (pwd !== "FK1PS") {
+        alert("❌ 密碼錯誤！無權清空排行榜。");
         return;
       }
 
-      safeCancelSpeech();
-
-      let isFinished = false;
-      const doEnd = () => {
-        if (!isFinished) {
-          isFinished = true;
-          if (activeSpeechTimeout) clearTimeout(activeSpeechTimeout);
-          if (onEndedCallback) onEndedCallback();
-        }
-      };
-
+      // 1. 清空本機
       try {
-        const u = new SpeechSynthesisUtterance(text);
-        const voices = window.speechSynthesis.getVoices() || [];
-        const matchVoice = voices.find(v => v.lang === 'zh-HK' || v.lang === 'yue-Hant-HK' || (v.lang && v.lang.toLowerCase().includes('cantonese')))
-                        || voices.find(v => v.lang === 'zh-TW' || v.lang === 'zh-Hant')
-                        || voices.find(v => v.lang && v.lang.startsWith('zh'));
-        if (matchVoice) {
-          u.voice = matchVoice;
-          u.lang = matchVoice.lang;
-        } else {
-          u.lang = 'zh-HK';
-        }
-
-        u.rate = 1.05;
-        u.pitch = 1.15;
-
-        u.onend = doEnd;
-        u.onerror = doEnd;
-
-        // 安全逾時保底，避免因環境無音訊驅動導致流程卡死
-        activeSpeechTimeout = setTimeout(doEnd, 4500);
-
-        window.speechSynthesis.speak(u);
-      } catch(e) {
-        doEnd();
-      }
-    }
-
-    const PRAISES = [
-      "太棒了！算得又快又準！",
-      "好犀利啊！反應敏捷，繼續連擊！",
-      "答得好漂亮！小狗老師為你鼓掌！",
-      "完美解答！你嘅公倍數概念好清晰！"
-    ];
-
-    const ENCOURAGES = [
-      "唔緊要，深呼吸，記住先列大數倍數！",
-      "差少少咋，吸取經驗，下一題追返！",
-      "唔好灰心，小狗老師陪住你，下一題加油！",
-      "慢慢來，看清楚題目，你一定做得到！"
-    ];
-
-    const REPORT_TIERS = {
-      expert: {
-        badgeIcon: "🏆",
-        title: "🏆「疾風數感大師」",
-        generateSpeech: (name, acc, time, combo) => 
-          `太令人驚嘆了，${name}同學！你十題答對了${acc}題，最高連擊達到${combo}次！答題速度極之敏捷，充分掌握了卓楠先列大數倍數的絕技！小狗老師以你為榮，鳳溪第一小學的英雄榜上非你莫屬！`,
-        analysis: (acc, time, combo) => 
-          `答題精準度達 ${acc*10}%！在 15 秒急速倒數下展現驚人速算直覺，最高達成 ${combo} 連擊。已完全透徹掌握最小公倍數（L.C.M.）核心運算邏輯！`,
-        tip: "小狗老師進階貼士：你已經具備頂尖數感，下次挑戰嘗試全程不用提示，刷新榜首紀錄吧！"
-      },
-      proficient: {
-        badgeIcon: "⭐",
-        title: "⭐「精準速算高手」",
-        generateSpeech: (name, acc, time, combo) => 
-          `做得非常好，${name}同學！你答對了${acc}題，正確率相當高，作答十分沉著。有幾題只要再細心留意公倍數交集，你一定能夠衝上滿分！繼續加油！`,
-        analysis: (acc, time, combo) => 
-          `答對 ${acc} 題，基礎概念非常扎實！對多數倍數關係判斷迅速，若能進一步縮短列舉思考秒數，總分將大幅飆升！`,
-        tip: "小狗老師進階貼士：遇到較大數字時，在腦中先列大數的頭 3 個倍數並檢驗較小數，速度會再快一倍！"
-      },
-      developing: {
-        badgeIcon: "🌱",
-        title: "🌱「堅毅探索先鋒」",
-        generateSpeech: (name, acc, time, combo) => 
-          `恭喜你順利完成挑戰，${name}同學！你答對了${acc}題，成功掌握了最小公倍數的基本計算。遇到比較大的數字時，記住多用卓楠的方法先列大數倍數，你一定會越算越快！`,
-        analysis: (acc, time, combo) => 
-          `答對 ${acc} 題，已建立正確的公倍數概念。作答時偶爾會受時間倒數緊張影響，多做兩次速算訓練即可突破瓶頸！`,
-        tip: "小狗老師進階貼士：遇到卡住時隨時回憶課本第 50 頁卓楠的秘技，先由大數乘起，能少走很多彎路！"
-      },
-      beginner: {
-        badgeIcon: "💪",
-        title: "💪「勇往直前特工」",
-        generateSpeech: (name, acc, time, combo) => 
-          `太棒了，${name}同學，你勇敢地完成了全部十題挑戰！數學就像跑步，跑得多就會越來越快。別氣餒，小狗老師會一直陪著你，我們再來一局，一定會有大進步！`,
-        analysis: (acc, time, combo) => 
-          `順利完成 10 題高強度速答衝刺！勇氣可嘉。只要多熟悉九九乘法表與倍數特徵，成績隨時會迎來大爆發！`,
-        tip: "小狗老師進階貼士：別擔心分數！答題時在草稿紙上先寫下較大數的倍數，小狗老師相信你下一次能答對更多！"
-      }
-    };
-
-    /* -------------------------------------------------------------
-     * 3. 數學運算與排行榜儲存
-     * ------------------------------------------------------------- */
-    function calcGcd(x, y) {
-      while (y !== 0) {
-        let t = y;
-        y = x % y;
-        x = t;
-      }
-      return x;
-    }
-
-    function calcLcm(x, y) {
-      return (x * y) / calcGcd(x, y);
-    }
-
-    let memoryLeaderboard = [];
-    function loadLeaderboard() {
-      try {
-        const str = localStorage.getItem('fk1_lcm_rankings');
-        if (str) memoryLeaderboard = JSON.parse(str);
+        localStorage.removeItem(LOCAL_LB_KEY);
       } catch(e) {}
-      return memoryLeaderboard;
-    }
 
-    function saveLeaderboard(record) {
+      // 2. 清空雲端
       try {
-        loadLeaderboard();
-        memoryLeaderboard.push(record);
-        memoryLeaderboard.sort((a, b) => b.score - a.score || a.time - b.time);
-        memoryLeaderboard = memoryLeaderboard.slice(0, 10);
-        localStorage.setItem('fk1_lcm_rankings', JSON.stringify(memoryLeaderboard));
-      } catch(e) {}
+        const resp = await fetch(CLOUD_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "clear", password: pwd })
+        });
+        const res = await resp.json();
+        alert(res.message || "排行榜已清空！");
+      } catch (err) {
+        alert("本機數據已清空，但雲端通訊失敗：" + err.message);
+      }
+      fetchLeaderboard();
     }
 
-    /* -------------------------------------------------------------
-     * 4. 遊戲核心狀態管理
-     * ------------------------------------------------------------- */
-    let playerName = "";
+    function renderLeaderboard() {
+      const lists = [document.getElementById("globalLeaderboardList"), document.getElementById("resultLeaderboardList")];
+      lists.forEach(el => {
+        if (!el) return;
+        el.innerHTML = "";
+        if (cachedLeaderboard.length === 0) {
+          el.innerHTML = '<li class="lb-item" style="justify-content:center; color:#64748b;">暫無競速成績，快來搶佔第 1 名！</li>';
+          return;
+        }
+        cachedLeaderboard.slice(0, 10).forEach((item, idx) => {
+          const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}.`;
+          const li = document.createElement("li");
+          li.className = "lb-item";
+          li.innerHTML = `
+            <div class="lb-left">
+              <span class="lb-rank">${medal}</span>
+              <span style="font-weight:700;">${escapeHTML(item.name)}</span>
+            </div>
+            <div>
+              <span class="lb-score">${item.score}分</span>
+              <span style="font-size:0.75rem; color:#64748b; margin-left:6px;">(${item.correct}對/${item.time}s)</span>
+            </div>
+          `;
+          el.appendChild(li);
+        });
+      });
+    }
+
+    function escapeHTML(str) {
+      return String(str).replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[tag] || tag));
+    }
+
+    /* =========================================================
+       5. 競賽遊戲主邏輯
+       ========================================================= */
     let currentQuestions = [];
-    let currentIndex = 0;
+    let qIndex = 0;
     let score = 0;
     let combo = 0;
     let maxCombo = 0;
     let correctCount = 0;
-    let startTime = 0;
-
-    let timeLeft = 15.0;
+    let playerName = "";
+    let questionStartTime = 0;
+    let questionElapsed = 0;
     let timerInterval = null;
+    let totalTimeCost = 0;
+    let isWaitingForNext = false;
     let isReadingVoice = false;
-    let isLocked = false;
-    let nextQuestionTimeout = null;
+    let nextStepTimeoutId = null;
 
-    function startQuestionTimer() {
-      isReadingVoice = false;
-      document.getElementById('btnSkipVoice').classList.add('hidden');
-      document.getElementById('timerStatusLabel').innerHTML = '<i class="fa-regular fa-clock"></i> <span>速答倒數：</span>';
+    const QUESTION_TIME_LIMIT = 15; // 每題 15 秒
 
-      timeLeft = 15.0;
-      if (timerInterval) clearInterval(timerInterval);
+    // DOM 元素
+    const introModal = document.getElementById("introModal");
+    const modalSpeakBtn = document.getElementById("modalSpeakBtn");
+    const modalCloseBtn = document.getElementById("modalCloseBtn");
+    const loginForm = document.getElementById("loginForm");
+    const playerNameInput = document.getElementById("playerName");
+    const inputGuideArrow = document.getElementById("inputGuideArrow");
 
-      const updateUI = () => {
-        const timerBar = document.getElementById('timerBar');
-        const timerText = document.getElementById('timerText');
-        const pct = Math.max(0, (timeLeft / 15.0) * 100);
-        timerBar.style.width = pct + '%';
-        timerText.innerText = timeLeft.toFixed(1) + 's';
+    const startScreen = document.getElementById("startScreen");
+    const gameScreen = document.getElementById("gameScreen");
+    const resultScreen = document.getElementById("resultScreen");
 
-        if (timeLeft <= 4.0) {
-          timerBar.className = 'h-full bg-rose-500 rounded-full bar-smooth';
-          timerText.className = 'font-black text-rose-600 animate-pulse';
-        } else if (timeLeft <= 8.0) {
-          timerBar.className = 'h-full bg-amber-500 rounded-full bar-smooth';
-          timerText.className = 'font-black text-amber-600';
-        } else {
-          timerBar.className = 'h-full bg-emerald-500 rounded-full bar-smooth';
-          timerText.className = 'font-black text-indigo-900';
-        }
-      };
+    const hudPlayer = document.getElementById("hudPlayer");
+    const hudProgress = document.getElementById("hudProgress");
+    const hudScore = document.getElementById("hudScore");
+    const hudCombo = document.getElementById("hudCombo");
 
-      updateUI();
-      enableChoices(true);
+    const companionBubbleText = document.getElementById("companionBubbleText");
+    const skipVoiceBtn = document.getElementById("skipVoiceBtn");
+    const manualNextBtn = document.getElementById("manualNextBtn");
 
-      timerInterval = setInterval(() => {
-        timeLeft -= 0.1;
-        if (timeLeft <= 0.05) {
-          timeLeft = 0;
-          updateUI();
-          clearInterval(timerInterval);
-          handleTimeOut();
-        } else {
-          updateUI();
-        }
-      }, 100);
+    const timerBar = document.getElementById("timerBar");
+    const timerStatusText = document.getElementById("timerStatusText");
+    const timerSecondsText = document.getElementById("timerSecondsText");
+
+    const qContext = document.getElementById("qContext");
+    const qTitle = document.getElementById("qTitle");
+    const optionsGrid = document.getElementById("optionsGrid");
+
+    const hintTriggerBtn = document.getElementById("hintTriggerBtn");
+    const hintBox = document.getElementById("hintBox");
+
+    // 事件監聽初始化
+    window.addEventListener("DOMContentLoaded", () => {
+      // 載入雲端排行榜
+      fetchLeaderboard();
+
+      // 打開 POPUP
+      setTimeout(() => {
+        introModal.classList.add("active");
+      }, 400);
+
+      modalSpeakBtn.addEventListener("click", () => {
+        initAudio();
+        speakText("汪汪！歡迎來到鳳溪第一小學 LCM 疾風競速大賽！我是 AI 小狗老師。挑戰共十題，每題十五秒，答得越快分數越高！小狗老師會全程陪同你一齊作答，加油！");
+      });
+
+      modalCloseBtn.addEventListener("click", () => {
+        initAudio();
+        window.speechSynthesis.cancel();
+        introModal.classList.remove("active");
+        playerNameInput.classList.add("highlight-guide");
+        inputGuideArrow.style.display = "flex";
+        playerNameInput.focus();
+        setTimeout(() => {
+          playerNameInput.classList.remove("highlight-guide");
+        }, 5000);
+      });
+
+      loginForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        initAudio();
+        const val = playerNameInput.value.trim();
+        if (!val) return;
+        playerName = val;
+        startGame();
+      });
+
+      document.getElementById("clearLbBtn").addEventListener("click", clearLeaderboardWithPassword);
+      skipVoiceBtn.addEventListener("click", handleSkipVoice);
+      manualNextBtn.addEventListener("click", triggerGoNext);
+      hintTriggerBtn.addEventListener("click", triggerHint);
+      document.getElementById("restartBtn").addEventListener("click", resetToStart);
+      document.getElementById("reVoiceBtn").addEventListener("click", replayResultVoice);
+    });
+
+    function startGame() {
+      // 隨機抽 10 題
+      const shuffled = [...QUESTION_BANK].sort(() => Math.random() - 0.5);
+      currentQuestions = shuffled.slice(0, 10);
+      qIndex = 0;
+      score = 0;
+      combo = 0;
+      maxCombo = 0;
+      correctCount = 0;
+      totalTimeCost = 0;
+
+      hudPlayer.innerText = playerName;
+      updateHUD();
+
+      startScreen.style.display = "none";
+      resultScreen.style.display = "none";
+      gameScreen.style.display = "block";
+
+      loadQuestion(qIndex);
     }
 
-    function enableChoices(enable) {
-      const btns = document.querySelectorAll('#choicesContainer button');
-      btns.forEach(b => {
-        b.disabled = !enable;
-        if (enable) {
-          b.classList.remove('opacity-60', 'cursor-not-allowed');
-        } else {
-          b.classList.add('opacity-60', 'cursor-not-allowed');
-        }
-      });
+    function updateHUD() {
+      hudProgress.innerText = `${qIndex + 1} / 10`;
+      hudScore.innerText = score;
+      hudCombo.innerText = `x${combo} 連擊`;
+      hudCombo.style.display = combo >= 2 ? "inline-block" : "none";
     }
 
     function loadQuestion(index) {
-      isLocked = false;
-      isReadingVoice = true;
-
-      if (nextQuestionTimeout) {
-        clearTimeout(nextQuestionTimeout);
-        nextQuestionTimeout = null;
+      if (index >= currentQuestions.length) {
+        endGame();
+        return;
       }
 
-      document.getElementById('hintContentBox').classList.add('hidden');
-      document.getElementById('hintUsedNotice').classList.add('hidden');
-      document.getElementById('btnUseHint').disabled = false;
-      document.getElementById('feedbackBanner').classList.add('hidden');
-      document.getElementById('nextQuestionActionBar').classList.add('hidden');
+      isWaitingForNext = false;
+      isReadingVoice = true;
+      if (nextStepTimeoutId) clearTimeout(nextStepTimeoutId);
+
+      // 重置並徹底隱藏小提示
+      hintBox.style.display = "none";
+      hintBox.innerHTML = "";
+      hintTriggerBtn.disabled = false;
+      hintTriggerBtn.style.opacity = "1";
+
+      manualNextBtn.style.display = "none";
+      skipVoiceBtn.style.display = "inline-flex";
 
       const q = currentQuestions[index];
-      const correctVal = calcLcm(q.a, q.b);
+      qContext.innerText = `題目情境 #${index + 1} · 列舉求最小公倍數`;
+      qTitle.innerText = `請找出 ${q.a} 和 ${q.b} 的最小公倍數`;
 
-      document.getElementById('hudIndex').innerText = (index + 1);
-      document.getElementById('hudScore').innerText = score;
-      document.getElementById('questionMathExpression').innerText = `求 ${q.a} 和 ${q.b} 的最小公倍數`;
-
-      // 產生選項
-      const distractors = new Set();
-      distractors.add(correctVal);
-
-      const c1 = q.a * q.b;
-      if (c1 !== correctVal) distractors.add(c1);
-      const c2 = correctVal + q.a;
-      if (c2 !== correctVal) distractors.add(c2);
-      const c3 = Math.max(q.a, q.b);
-      if (c3 !== correctVal) distractors.add(c3);
-      const c4 = correctVal * 2;
-      distractors.add(c4);
-
-      let options = Array.from(distractors).slice(0, 4);
-      while (options.length < 4) {
-        options.push(correctVal + options.length * 2);
-      }
-      options.sort(() => Math.random() - 0.5);
-
-      const choicesBox = document.getElementById('choicesContainer');
-      choicesBox.innerHTML = '';
-      options.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'py-4 bg-slate-50 hover:bg-indigo-50 border-2 border-indigo-200 hover:border-indigo-500 rounded-2xl text-xl sm:text-2xl font-black text-slate-800 shadow-sm transition active:scale-95 cursor-pointer';
-        btn.innerText = opt;
-        btn.onclick = () => handleAnswer(opt, correctVal, btn);
-        choicesBox.appendChild(btn);
+      // 選項隨機排序
+      const opts = [...q.options].sort(() => Math.random() - 0.5);
+      optionsGrid.innerHTML = "";
+      opts.forEach(val => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "opt-btn";
+        btn.innerText = val;
+        btn.disabled = true; // 讀題期間鎖定
+        btn.addEventListener("click", () => handleSelectAnswer(val, q.ans, btn));
+        optionsGrid.appendChild(btn);
       });
 
-      enableChoices(false);
+      // 凍結計時條
+      timerBar.style.transform = "scaleX(1)";
+      timerStatusText.innerText = "🔊 語音讀題中 (不計時)...";
+      timerSecondsText.innerText = "15.0s";
+      companionBubbleText.innerText = `第 ${index + 1} 題。請找出 ${q.a} 和 ${q.b} 的最小公倍數。`;
 
-      const timerBar = document.getElementById('timerBar');
-      const timerText = document.getElementById('timerText');
-      const statusLabel = document.getElementById('timerStatusLabel');
-      const btnSkip = document.getElementById('btnSkipVoice');
+      // 朗讀題目
+      speakText(`第 ${index + 1} 題。請找出 ${q.a} 和 ${q.b} 的最小公倍數。`, () => {
+        startAnsweringTimer();
+      });
+    }
 
-      timerBar.style.width = '100%';
-      timerBar.className = 'h-full bg-indigo-400 rounded-full bar-smooth';
-      timerText.innerText = '讀題中';
-      statusLabel.innerHTML = '<span class="text-amber-600 font-black animate-pulse">🔊 語音讀題中（不計時）</span>';
-      btnSkip.classList.remove('hidden');
+    function handleSkipVoice() {
+      if (!isReadingVoice) return;
+      window.speechSynthesis.cancel();
+      startAnsweringTimer();
+    }
 
-      setDogDialogue("伴學中", "認真聽題目，諗好先答，衝刺高分！");
+    function startAnsweringTimer() {
+      if (!isReadingVoice && timerInterval) return;
+      isReadingVoice = false;
+      skipVoiceBtn.style.display = "none";
 
-      const voiceText = `第 ${index + 1} 題。請找出 ${q.a} 和 ${q.b} 的最小公倍數。`;
-      speakText(voiceText, () => {
-        if (isReadingVoice) {
-          startQuestionTimer();
+      // 解鎖選項按鈕
+      document.querySelectorAll(".opt-btn").forEach(btn => btn.disabled = false);
+
+      timerStatusText.innerText = "速答剩餘時間獎勵";
+      companionBubbleText.innerText = "小狗老師正在為你加油！";
+      questionStartTime = Date.now();
+
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        const elapsed = (Date.now() - questionStartTime) / 1000;
+        questionElapsed = elapsed;
+        const remain = Math.max(0, QUESTION_TIME_LIMIT - elapsed);
+
+        const ratio = remain / QUESTION_TIME_LIMIT;
+        timerBar.style.transform = `scaleX(${ratio})`;
+        timerSecondsText.innerText = `${remain.toFixed(1)}s`;
+
+        if (remain <= 0) {
+          clearInterval(timerInterval);
+          handleTimeOut();
         }
-      });
+      }, 50);
     }
 
-    function setDogDialogue(tag, text) {
-      document.getElementById('dogStatusTag').innerText = tag;
-      document.getElementById('dogDialogue').innerText = text;
-    }
+    function handleSelectAnswer(chosen, correct, clickedBtn) {
+      if (isWaitingForNext || isReadingVoice) return;
+      isWaitingForNext = true;
+      clearInterval(timerInterval);
 
-    function proceedToNext() {
-      if (nextQuestionTimeout) {
-        clearTimeout(nextQuestionTimeout);
-        nextQuestionTimeout = null;
-      }
-      safeCancelSpeech();
-      document.getElementById('nextQuestionActionBar').classList.add('hidden');
+      totalTimeCost += Math.min(QUESTION_TIME_LIMIT, Math.round(questionElapsed));
+      const remainSec = Math.max(0, QUESTION_TIME_LIMIT - questionElapsed);
 
-      currentIndex++;
-      if (currentIndex < 10) {
-        loadQuestion(currentIndex);
-      } else {
-        finishGame();
-      }
-    }
+      // 禁用所有按鈕
+      document.querySelectorAll(".opt-btn").forEach(btn => btn.disabled = true);
 
-    function scheduleNextTransition(feedbackSpeechText) {
-      const actionBar = document.getElementById('nextQuestionActionBar');
-      const waitHint = document.getElementById('nextQuestionWaitHint');
-      const nextBtn = document.getElementById('btnManualNextQuestion');
-
-      actionBar.classList.remove('hidden');
-      waitHint.innerText = "小狗老師說話中...說完自動進入下一題";
-
-      let hasProceeded = false;
-      const doProceed = () => {
-        if (!hasProceeded) {
-          hasProceeded = true;
-          proceedToNext();
-        }
-      };
-
-      nextBtn.onclick = () => {
-        doProceed();
-      };
-
-      speakText(feedbackSpeechText, () => {
-        waitHint.innerText = "即將進入下一題...";
-        nextQuestionTimeout = setTimeout(doProceed, 400);
-      });
-
-      nextQuestionTimeout = setTimeout(doProceed, 5500);
-    }
-
-    function handleAnswer(chosen, correct, btnEl) {
-      if (isLocked) return;
-      isLocked = true;
-      if (timerInterval) clearInterval(timerInterval);
-      safeCancelSpeech();
-      enableChoices(false);
-
-      const isCorrect = (chosen === correct);
-      const feedbackEl = document.getElementById('feedbackBanner');
-      feedbackEl.classList.remove('hidden');
-
-      let speechToPlay = "";
-
-      if (isCorrect) {
+      if (chosen === correct) {
+        // 答對
+        playSound("correct");
+        clickedBtn.classList.add("correct");
         correctCount++;
         combo++;
         if (combo > maxCombo) maxCombo = combo;
 
-        const speedBonus = Math.round(timeLeft * 15);
-        const comboBonus = 1 + Math.min(combo * 0.15, 1.0);
-        const gained = Math.round((100 + speedBonus) * comboBonus);
-        score += gained;
+        // 計算分數：基礎100分 + 速度加分 * 連擊倍率
+        const speedBonus = Math.round(remainSec * 15);
+        const comboMultiplier = 1 + (combo - 1) * 0.2;
+        const earned = Math.round((100 + speedBonus) * comboMultiplier);
+        score += earned;
 
-        Sound.correct();
-        btnEl.className = 'py-4 bg-emerald-500 border-2 border-emerald-600 rounded-2xl text-xl sm:text-2xl font-black text-white shadow-md';
-        feedbackEl.className = 'mb-3 p-2.5 rounded-xl text-center text-xs sm:text-sm font-black bg-emerald-100 text-emerald-900 border border-emerald-300';
-        feedbackEl.innerText = `太厲害了！答對 +${gained} 分 (速答獎勵 +${speedBonus})`;
-
-        if (combo > 1) {
-          document.getElementById('comboBadge').classList.remove('hidden');
-          document.getElementById('comboNumber').innerText = combo;
-        }
-
-        speechToPlay = PRAISES[Math.floor(Math.random() * PRAISES.length)];
-        setDogDialogue("⭐ 老師讚賞", speechToPlay);
-
+        const praise = PRAISES[Math.floor(Math.random() * PRAISES.length)];
+        companionBubbleText.innerText = `🎉 答對！+${earned}分！${praise}`;
+        updateHUD();
+        scheduleNextTransition(praise);
       } else {
+        // 答錯
+        playSound("wrong");
+        clickedBtn.classList.add("wrong");
         combo = 0;
-        document.getElementById('comboBadge').classList.add('hidden');
-        score = Math.max(0, score - 30);
+        updateHUD();
 
-        Sound.wrong();
-        btnEl.className = 'py-4 bg-rose-500 border-2 border-rose-600 rounded-2xl text-xl sm:text-2xl font-black text-white shadow-md';
-        
-        document.querySelectorAll('#choicesContainer button').forEach(b => {
-          if (parseInt(b.innerText, 10) === correct) {
-            b.className = 'py-4 bg-emerald-100 border-2 border-emerald-500 rounded-2xl text-xl sm:text-2xl font-black text-emerald-900';
-          }
+        // 標記正確答案
+        document.querySelectorAll(".opt-btn").forEach(btn => {
+          if (parseInt(btn.innerText) === correct) btn.classList.add("correct");
         });
 
-        const gameBox = document.getElementById('viewGame');
-        gameBox.classList.add('shake-anim');
-        setTimeout(() => gameBox.classList.remove('shake-anim'), 400);
-
-        feedbackEl.className = 'mb-3 p-2.5 rounded-xl text-center text-xs sm:text-sm font-black bg-rose-100 text-rose-900 border border-rose-300';
-        feedbackEl.innerText = `答錯了！正確答案是 ${correct}（扣 30 分）`;
-
-        speechToPlay = ENCOURAGES[Math.floor(Math.random() * ENCOURAGES.length)];
-        setDogDialogue("💪 溫暖打氣", speechToPlay);
+        const encourage = ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)];
+        companionBubbleText.innerText = `💡 哎呀！正確答案是 ${correct}。${encourage}`;
+        scheduleNextTransition(encourage);
       }
-
-      document.getElementById('hudScore').innerText = score;
-      scheduleNextTransition(speechToPlay);
     }
 
     function handleTimeOut() {
-      if (isLocked) return;
-      isLocked = true;
-      safeCancelSpeech();
-      enableChoices(false);
-
+      if (isWaitingForNext) return;
+      isWaitingForNext = true;
+      totalTimeCost += QUESTION_TIME_LIMIT;
       combo = 0;
-      document.getElementById('comboBadge').classList.add('hidden');
+      updateHUD();
 
-      Sound.wrong();
-
-      const q = currentQuestions[currentIndex];
-      const correctVal = calcLcm(q.a, q.b);
-
-      document.querySelectorAll('#choicesContainer button').forEach(b => {
-        if (parseInt(b.innerText, 10) === correctVal) {
-          b.className = 'py-4 bg-emerald-100 border-2 border-emerald-500 rounded-2xl text-xl sm:text-2xl font-black text-emerald-900';
+      playSound("wrong");
+      document.querySelectorAll(".opt-btn").forEach(btn => {
+        btn.disabled = true;
+        if (parseInt(btn.innerText) === currentQuestions[qIndex].ans) {
+          btn.classList.add("correct");
         }
       });
 
-      const feedbackEl = document.getElementById('feedbackBanner');
-      feedbackEl.classList.remove('hidden');
-      feedbackEl.className = 'mb-3 p-2.5 rounded-xl text-center text-xs sm:text-sm font-black bg-amber-100 text-amber-950 border border-amber-300';
-      feedbackEl.innerText = `時間到！正確答案是 ${correctVal}`;
-
-      const speech = "時間到啦！唔好急，下一題注意時間，再接再厲！";
-      setDogDialogue("⏰ 時間到", speech);
-
-      scheduleNextTransition(speech);
+      const timeoutEncourage = "時間到！保持沉著，下一題我們加快思維！";
+      companionBubbleText.innerText = `⏰ 時間到！${timeoutEncourage}`;
+      scheduleNextTransition(timeoutEncourage);
     }
 
-    let lastReportSpeechText = "";
+    function triggerHint() {
+      if (isWaitingForNext || isReadingVoice) return;
+      playSound("hint");
+      score = Math.max(0, score - 80);
+      updateHUD();
 
-    function finishGame() {
-      safeCancelSpeech();
-      Sound.finish();
+      const q = currentQuestions[qIndex];
+      hintBox.innerHTML = `<strong>💡 卓楠列舉法秘技：</strong><br>${q.tip}`;
+      hintBox.style.display = "block";
+      hintTriggerBtn.disabled = true;
+      hintTriggerBtn.style.opacity = "0.5";
 
-      const totalElapsed = Math.round((Date.now() - startTime) / 1000);
-      const avgTime = (totalElapsed / 10).toFixed(1);
+      companionBubbleText.innerText = "卓楠小秘技已開啟，注意扣除 80 分！";
+    }
 
-      document.getElementById('viewGame').classList.add('hidden');
-      document.getElementById('viewResult').classList.remove('hidden');
+    function scheduleNextTransition(voiceFeedback) {
+      manualNextBtn.style.display = "inline-flex";
+      speakText(voiceFeedback, () => {
+        nextStepTimeoutId = setTimeout(triggerGoNext, 400);
+      });
+      // 6秒自動跳題防護
+      nextStepTimeoutId = setTimeout(triggerGoNext, 6000);
+    }
 
-      document.getElementById('resultPlayerGreeting').innerText = `選手：${playerName}`;
-      document.getElementById('resultFinalScore').innerText = score;
-      document.getElementById('resultAccuracy').innerText = `${correctCount} / 10`;
-      document.getElementById('resultMaxCombo').innerText = `x${maxCombo}`;
-      document.getElementById('resultTotalTime').innerText = `${totalElapsed}s (均 ${avgTime}s)`;
+    function triggerGoNext() {
+      if (!isWaitingForNext) return;
+      if (nextStepTimeoutId) clearTimeout(nextStepTimeoutId);
+      window.speechSynthesis.cancel();
+      manualNextBtn.style.display = "none";
+      qIndex++;
+      loadQuestion(qIndex);
+    }
 
-      let tierKey = 'beginner';
-      if (correctCount >= 9) {
-        tierKey = 'expert';
-      } else if (correctCount >= 7) {
-        tierKey = 'proficient';
-      } else if (correctCount >= 5) {
-        tierKey = 'developing';
-      }
+    /* =========================================================
+       6. 挑戰結束與個人化報告生成
+       ========================================================= */
+    let lastReportSummary = "";
 
-      const reportConfig = REPORT_TIERS[tierKey];
+    async function endGame() {
+      gameScreen.style.display = "none";
+      resultScreen.style.display = "block";
 
-      document.getElementById('resultBadgeIcon').innerText = reportConfig.badgeIcon;
-      document.getElementById('resultTierTitle').innerText = reportConfig.title;
-      document.getElementById('dogReportAnalysisText').innerText = reportConfig.analysis(correctCount, totalElapsed, maxCombo);
-      document.getElementById('dogReportTipText').innerText = reportConfig.tip;
+      const avgTime = (totalTimeCost / 10).toFixed(1);
+      document.getElementById("resScore").innerText = score;
+      document.getElementById("resAccuracy").innerText = `${correctCount}/10`;
+      document.getElementById("resAvgTime").innerText = `${avgTime}s`;
 
-      lastReportSpeechText = reportConfig.generateSpeech(playerName, correctCount, totalElapsed, maxCombo);
-      speakText(lastReportSpeechText);
+      // 產生 4 階個人化評語
+      const report = generateAIAssessment(correctCount, score, avgTime, maxCombo);
+      document.getElementById("resBadgeIcon").innerText = report.icon;
+      document.getElementById("resBadgeTitle").innerText = report.title;
+      document.getElementById("resBadgeTag").innerText = report.tag;
+      document.getElementById("resReportText").innerHTML = report.html;
+      document.getElementById("resTipText").innerHTML = `💡 <strong>小狗老師進階小貼士：</strong>${report.tip}`;
 
-      saveLeaderboard({
+      lastReportSummary = report.speech;
+
+      // 寫入 Google Sheet 雲端並刷新榜單
+      const entry = {
         name: playerName,
         score: score,
-        time: totalElapsed,
-        accuracy: correctCount
-      });
+        correct: correctCount,
+        time: totalTimeCost,
+        date: new Date().toISOString()
+      };
+      await recordScoreToCloud(entry);
+
+      // 播放總結語音
+      speakText(lastReportSummary);
     }
 
-    /* -------------------------------------------------------------
-     * 5. 事件綁定與互動操作
-     * ------------------------------------------------------------- */
-    document.addEventListener('DOMContentLoaded', () => {
-      loadLeaderboard();
-
-      const toggleAudioBtn = document.getElementById('toggleAudioBtn');
-      toggleAudioBtn.addEventListener('click', () => {
-        isSoundOn = !isSoundOn;
-        document.getElementById('audioIcon').className = isSoundOn ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
-        document.getElementById('audioStatusText').innerText = isSoundOn ? '音效開' : '靜音';
-        if (!isSoundOn) safeCancelSpeech();
-      });
-
-      const modalWelcome = document.getElementById('modalDogWelcome');
-      const btnWelcomeListen = document.getElementById('btnWelcomeListenVoice');
-      const btnWelcomeConfirm = document.getElementById('btnWelcomeConfirm');
-      const nameInput = document.getElementById('studentNameInput');
-      const guideBadge = document.getElementById('guideArrowBadge');
-
-      const welcomeSpeechText = "汪汪！你好啊！我係你嘅 AI 小狗老師！今次嘅 LCM 疾風競速賽有二十題題庫，會隨機抽出十題。每一題有十五秒倒數，答得越快越高分！連續答啱仲有連擊加成！請你在輸入框輸入你的班別、學號及姓名。AI 小狗老師會全程陪同你一齊作答，加油！";
-
-      btnWelcomeListen.addEventListener('click', () => {
-        getAudioContext();
-        speakText(welcomeSpeechText);
-      });
-
-      btnWelcomeConfirm.addEventListener('click', () => {
-        getAudioContext();
-        safeCancelSpeech();
-        modalWelcome.classList.add('hidden');
-
-        nameInput.classList.add('highlight-target');
-        guideBadge.classList.remove('hidden');
-        nameInput.focus();
-
-        setTimeout(() => {
-          nameInput.classList.remove('highlight-target');
-          guideBadge.classList.add('hidden');
-        }, 3500);
-      });
-
-      document.getElementById('btnReopenDogModal').addEventListener('click', () => {
-        modalWelcome.classList.remove('hidden');
-      });
-
-      document.getElementById('btnStartGame').addEventListener('click', () => {
-        getAudioContext();
-        safeCancelSpeech();
-
-        const inputVal = nameInput.value.trim();
-        const errAlert = document.getElementById('nameErrorAlert');
-
-        if (!inputVal) {
-          errAlert.classList.remove('hidden');
-          nameInput.focus();
-          return;
-        }
-        errAlert.classList.add('hidden');
-        playerName = inputVal;
-
-        score = 0;
-        combo = 0;
-        maxCombo = 0;
-        correctCount = 0;
-        currentIndex = 0;
-        startTime = Date.now();
-
-        const shuffled = [...QUESTION_BANK].sort(() => Math.random() - 0.5);
-        currentQuestions = shuffled.slice(0, 10);
-
-        document.getElementById('viewStart').classList.add('hidden');
-        document.getElementById('viewResult').classList.add('hidden');
-        document.getElementById('viewGame').classList.remove('hidden');
-
-        document.getElementById('hudPlayerName').innerText = playerName;
-        document.getElementById('comboBadge').classList.add('hidden');
-
-        loadQuestion(0);
-      });
-
-      document.getElementById('btnSkipVoice').addEventListener('click', () => {
-        if (isReadingVoice) {
-          safeCancelSpeech();
-          startQuestionTimer();
-        }
-      });
-
-      const btnUseHint = document.getElementById('btnUseHint');
-      btnUseHint.addEventListener('click', () => {
-        if (isLocked) return;
-        Sound.hint();
-
-        score = Math.max(0, score - 80);
-        document.getElementById('hudScore').innerText = score;
-
-        const q = currentQuestions[currentIndex];
-        document.getElementById('hintTextDetail').innerText = q.hint;
-        document.getElementById('hintContentBox').classList.remove('hidden');
-        document.getElementById('hintUsedNotice').classList.remove('hidden');
-
-        btnUseHint.disabled = true;
-        setDogDialogue("💡 柴犬提示", "已運用卓楠秘技！先看大數倍數，速度更快！");
-      });
-
-      document.getElementById('btnPlayAgain').addEventListener('click', () => {
-        safeCancelSpeech();
-        document.getElementById('viewResult').classList.add('hidden');
-        document.getElementById('viewStart').classList.remove('hidden');
-      });
-
-      document.getElementById('btnReplayReportSpeech').addEventListener('click', () => {
-        getAudioContext();
-        if (lastReportSpeechText) {
-          speakText(lastReportSpeechText);
-        }
-      });
-
-      const modalLeaderboard = document.getElementById('modalLeaderboard');
-      function renderBoard() {
-        const list = loadLeaderboard();
-        const container = document.getElementById('leaderboardList');
-        if (list.length === 0) {
-          container.innerHTML = '<p class="text-center text-xs text-slate-400 py-6 font-bold">暫無競賽紀錄，快來搶佔第 1 名！</p>';
-          return;
-        }
-        let html = '';
-        list.forEach((entry, i) => {
-          let badgeColor = 'bg-slate-100 text-slate-700';
-          if (i === 0) badgeColor = 'bg-amber-400 text-amber-950 font-black';
-          else if (i === 1) badgeColor = 'bg-slate-300 text-slate-900 font-black';
-          else if (i === 2) badgeColor = 'bg-amber-600 text-white font-black';
-
-          html += `
-            <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-              <div class="flex items-center gap-2.5">
-                <span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs ${badgeColor}">
-                  ${i + 1}
-                </span>
-                <div>
-                  <span class="font-black text-slate-800">${escapeHtml(entry.name)}</span>
-                  <div class="text-[10px] text-slate-400">正確率: ${entry.accuracy}/10 • 耗時: ${entry.time}s</div>
-                </div>
-              </div>
-              <span class="text-sm font-black text-amber-600">${entry.score} 分</span>
-            </div>
-          `;
-        });
-        container.innerHTML = html;
+    function generateAIAssessment(correct, score, avgTime, maxC) {
+      if (correct >= 9) {
+        return {
+          icon: "🏆",
+          title: "疾風數感大師",
+          tag: "卓越成就",
+          speech: `太令人驚嘆了，${playerName} 同學！你答對了 ${correct} 題，答題速度像閃電一樣快，充分掌握了先列大數倍數的絕技！小狗老師以你為榮，風溪第一小學的榮譽榜上有你的名字啦！`,
+          html: `<strong>汪汪！表現極致卓越！</strong><br>你在 10 題中奪下 <strong>${correct} 題正確</strong>，斬獲最高 <strong>${maxC} 連擊</strong>！不僅計算速度極快（平均 ${avgTime} 秒），更完全體現了先從較大數列舉的高階數感！`,
+          tip: "你已經具備頂尖的敏捷心算能力！下次挑戰嘗試完全不使用提示，刷新風雲榜紀錄吧！"
+        };
+      } else if (correct >= 7) {
+        return {
+          icon: "⭐",
+          title: "精準速算高手",
+          tag: "優異表現",
+          speech: `做得非常好，${playerName} 同學！你答對了 ${correct} 題，正確率很高，作答十分沉著。有幾題只要再細心留意公倍數的交集，你一定能衝上滿分！`,
+          html: `<strong>太棒了！運算技巧純熟！</strong><br>答對題數達 <strong>${correct}/10</strong>，平均答題時間為 <strong>${avgTime} 秒</strong>。你對公倍數的敏銳度很高，整體發揮相當穩定！`,
+          tip: "遇到比較大的數字時，先在心中快速默數大數的倍數，就能更快鎖定目標！"
+        };
+      } else if (correct >= 5) {
+        return {
+          icon: "🌱",
+          title: "堅毅探索先鋒",
+          tag: "潛力無窮",
+          speech: `恭喜你順利完成挑戰，${playerName} 同學！你答對了 ${correct} 題，已經掌握了最小公倍數的基本概念。記住多用卓楠的方法先列大數，你會算得更快！`,
+          html: `<strong>值得鼓勵！基本功扎實！</strong><br>順利答對 <strong>${correct} 題</strong>。你已經清楚掌握了最小公倍數（L.C.M.）的意義，部分題目只要再注意檢查倍數即可！`,
+          tip: "試著不要從小數慢慢列舉，直接鎖定大數倍數並判斷是否能被小數整除，速度會快一倍！"
+        };
+      } else {
+        return {
+          icon: "💪",
+          title: "勇往直前特工",
+          tag: "努力奮進",
+          speech: `太棒了，${playerName} 同學，你勇敢地完成了全部挑戰！數學就像跑步，跑得多就會越來越快。別氣餒，小狗老師會一直陪著你，我們再來一局，一定會進步！`,
+          html: `<strong>堅持到底，勇氣可嘉！</strong><br>你成功完成了整場疾風競賽！雖然有幾題未能在倒數前算完，但探索學習的過程就是進步的基石！`,
+          tip: "在紙上先把較大的數寫下來，例如求 8 和 14，先看 14、28、42、56，看到 56 立即停筆！"
+        };
       }
+    }
 
-      function escapeHtml(str) {
-        return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+    function replayResultVoice() {
+      if (lastReportSummary) {
+        speakText(lastReportSummary);
       }
+    }
 
-      document.getElementById('btnOpenLeaderboard').addEventListener('click', () => {
-        renderBoard();
-        modalLeaderboard.classList.remove('hidden');
-      });
-      document.getElementById('btnShowBoardFromResult').addEventListener('click', () => {
-        renderBoard();
-        modalLeaderboard.classList.remove('hidden');
-      });
-      document.getElementById('btnCloseBoard').addEventListener('click', () => {
-        modalLeaderboard.classList.add('hidden');
-      });
-      document.getElementById('btnDismissBoard').addEventListener('click', () => {
-        modalLeaderboard.classList.add('hidden');
-      });
-      document.getElementById('btnResetBoard').addEventListener('click', () => {
-        memoryLeaderboard = [];
-        try { localStorage.removeItem('fk1_lcm_rankings'); } catch(e) {}
-        renderBoard();
-      });
-
-    });
+    function resetToStart() {
+      window.speechSynthesis.cancel();
+      resultScreen.style.display = "none";
+      startScreen.style.display = "block";
+      fetchLeaderboard();
+    }
   </script>
 </body>
 </html>
