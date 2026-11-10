@@ -258,16 +258,6 @@
       background: #fde68a;
     }
 
-    .btn-secondary {
-      background: #f1f5f9;
-      color: #334155;
-      flex: 1;
-    }
-
-    .btn-secondary:hover {
-      background: #e2e8f0;
-    }
-
     /* 答題介面 */
     #gameScreen {
       display: none;
@@ -481,7 +471,7 @@
       40%, 80% { transform: translateX(6px); }
     }
 
-    /* 卓楠秘技提示 */
+    /* 何SIR秘技提示 */
     .hint-container {
       margin-top: 10px;
     }
@@ -714,7 +704,7 @@
         <ul>
           <li>全卷會隨機抽選 <strong>10 題</strong> 對決！</li>
           <li>每題有 <strong>15 秒</strong>，越快答對分數越高！</li>
-          <li>遇到難題可以看「卓楠提示」，但會扣除 80 分喔！</li>
+          <li>遇到難題可以看「何SIR提示」，但會扣除 80 分喔！</li>
         </ul>
         <p><strong>小狗老師會全程陪同你一齊作答，加油！</strong></p>
       </div>
@@ -805,9 +795,9 @@
         <!-- 選項按鈕 -->
         <div class="answers-grid" id="optionsGrid"></div>
 
-        <!-- 卓楠秘技提示 -->
+        <!-- 何SIR秘技提示 -->
         <div class="hint-container">
-          <button type="button" class="hint-trigger-btn" id="hintTriggerBtn">💡 呼叫卓楠秘技提示（扣 80 分）</button>
+          <button type="button" class="hint-trigger-btn" id="hintTriggerBtn">💡 呼叫何SIR秘技提示（扣 80 分）</button>
           <div class="hint-box" id="hintBox"></div>
         </div>
       </div>
@@ -881,7 +871,7 @@
       { a: 4, b: 6, ans: 12, options: [8, 12, 18, 24], tip: "先列較大的數 6 的倍數：6、12... 12 也是 4 的倍數，所以是 12！" },
       { a: 6, b: 9, ans: 18, options: [12, 18, 27, 36], tip: "先列較大的數 9 的倍數：9、18... 18 剛好是 6 的倍數！" },
       { a: 2, b: 5, ans: 10, options: [7, 10, 15, 20], tip: "2 和 5 是質數（互質），最小公倍數直接將兩數相乘：2 × 5 = 10！" },
-      { a: 8, b: 14, ans: 56, options: [28, 48, 56, 112], tip: "像卓楠一樣先列 14 的倍數：14、28、42、56... 56 是 8 的倍數！" },
+      { a: 8, b: 14, ans: 56, options: [28, 48, 56, 112], tip: "依照何SIR秘技先列 14 的倍數：14、28、42、56... 56 是 8 的倍數！" },
       { a: 9, b: 15, ans: 45, options: [30, 45, 60, 90], tip: "先列較大數 15 的倍數：15、30、45... 45 也是 9 的倍數！" },
       { a: 3, b: 4, ans: 12, options: [6, 9, 12, 24], tip: "3 和 4 是相鄰數（互質），兩數相乘就是 12！" },
       { a: 5, b: 10, ans: 10, options: [10, 15, 20, 50], tip: "大數 10 本身就是較小數 5 的倍數，所以最小公倍數直接就是 10！" },
@@ -901,7 +891,7 @@
     ];
 
     /* =========================================================
-       3. 語音庫與音效合成引擎 (Web Audio / Speech)
+       3. 語音庫與音效合成引擎
        ========================================================= */
     const PRAISES = [
       "好犀利啊！反應好快，連擊分數飆升！",
@@ -911,7 +901,7 @@
     ];
 
     const ENCOURAGEMENTS = [
-      "唔緊要，深呼吸！記住卓楠秘技：先列大數倍數！",
+      "唔緊要，深呼吸！記住何SIR秘技：先列大數倍數！",
       "差少少咋！小狗老師陪住你，下一題一定追返！",
       "保持冷靜！慢慢思考倍數關係，你可以的！",
       "失敗乃成功之母，下一題看準再出擊！"
@@ -959,7 +949,6 @@
       }
     }
 
-    let activeUtterance = null;
     function speakText(text, onEndCallback = null) {
       if (!('speechSynthesis' in window)) {
         if (onEndCallback) onEndCallback();
@@ -970,7 +959,6 @@
         const ut = new SpeechSynthesisUtterance(text);
         ut.lang = 'zh-HK';
         ut.rate = 1.05;
-        activeUtterance = ut;
 
         let hasCalled = false;
         const complete = () => {
@@ -984,7 +972,7 @@
         ut.onerror = complete;
         window.speechSynthesis.speak(ut);
 
-        // 8秒超時保底，避免因載具異常掛起
+        // 8秒超時保底
         setTimeout(complete, 8000);
       } catch(e) {
         if (onEndCallback) onEndCallback();
@@ -992,7 +980,7 @@
     }
 
     /* =========================================================
-       4. 排行榜數據處理 (Google Sheets API + LocalStorage 備用)
+       4. 排行榜數據處理
        ========================================================= */
     const LOCAL_LB_KEY = "fk1ps_lcm_records";
     let cachedLeaderboard = [];
@@ -1028,7 +1016,7 @@
     }
 
     async function recordScoreToCloud(entry) {
-      // 本機先備份
+      // 1. 本機備份
       try {
         let local = [];
         const raw = localStorage.getItem(LOCAL_LB_KEY);
@@ -1038,7 +1026,7 @@
         localStorage.setItem(LOCAL_LB_KEY, JSON.stringify(local.slice(0, 10)));
       } catch(e) {}
 
-      // 發送至 Apps Script Web App
+      // 2. 發送至 Google Apps Script
       try {
         await fetch(CLOUD_API_URL, {
           method: "POST",
@@ -1048,7 +1036,6 @@
       } catch (err) {
         console.error("雲端成績發送失敗：", err);
       }
-      // 重新整理
       await fetchLeaderboard();
     }
 
@@ -1116,7 +1103,7 @@
     }
 
     /* =========================================================
-       5. 競賽遊戲主邏輯
+       5. 競賽主邏輯與防重複鎖
        ========================================================= */
     let currentQuestions = [];
     let qIndex = 0;
@@ -1133,7 +1120,11 @@
     let isReadingVoice = false;
     let nextStepTimeoutId = null;
 
-    const QUESTION_TIME_LIMIT = 15; // 每題 15 秒
+    // 關鍵狀態鎖：防止重複上載
+    let isGameEnded = false;
+    let hasUploadedScore = false;
+
+    const QUESTION_TIME_LIMIT = 15;
 
     // DOM 元素
     const introModal = document.getElementById("introModal");
@@ -1167,19 +1158,16 @@
     const hintTriggerBtn = document.getElementById("hintTriggerBtn");
     const hintBox = document.getElementById("hintBox");
 
-    // 事件監聽初始化
     window.addEventListener("DOMContentLoaded", () => {
-      // 載入雲端排行榜
       fetchLeaderboard();
 
-      // 打開 POPUP
       setTimeout(() => {
         introModal.classList.add("active");
       }, 400);
 
       modalSpeakBtn.addEventListener("click", () => {
         initAudio();
-        speakText("汪汪！歡迎來到鳳溪第一小學 LCM 疾風競速大賽！我是 AI 小狗老師。挑戰共十題，每題十五秒，答得越快分數越高！小狗老師會全程陪同你一齊作答，加油！");
+        speakText("汪汪！歡迎來到鳳溪第一小學 LCM 疾風競速大賽！我是 AI 小狗老師。挑戰共十題，每題十五秒，答得越快分數越高！遇到難題可以呼叫何SIR秘技提示，但會扣除 80 分。小狗老師會全程陪同你一齊作答，加油！");
       });
 
       modalCloseBtn.addEventListener("click", () => {
@@ -1212,7 +1200,6 @@
     });
 
     function startGame() {
-      // 隨機抽 10 題
       const shuffled = [...QUESTION_BANK].sort(() => Math.random() - 0.5);
       currentQuestions = shuffled.slice(0, 10);
       qIndex = 0;
@@ -1221,6 +1208,9 @@
       maxCombo = 0;
       correctCount = 0;
       totalTimeCost = 0;
+
+      isGameEnded = false;
+      hasUploadedScore = false;
 
       hudPlayer.innerText = playerName;
       updateHUD();
@@ -1249,7 +1239,7 @@
       isReadingVoice = true;
       if (nextStepTimeoutId) clearTimeout(nextStepTimeoutId);
 
-      // 重置並徹底隱藏小提示
+      // 重置並隱藏提示
       hintBox.style.display = "none";
       hintBox.innerHTML = "";
       hintTriggerBtn.disabled = false;
@@ -1262,7 +1252,6 @@
       qContext.innerText = `題目情境 #${index + 1} · 列舉求最小公倍數`;
       qTitle.innerText = `請找出 ${q.a} 和 ${q.b} 的最小公倍數`;
 
-      // 選項隨機排序
       const opts = [...q.options].sort(() => Math.random() - 0.5);
       optionsGrid.innerHTML = "";
       opts.forEach(val => {
@@ -1270,18 +1259,16 @@
         btn.type = "button";
         btn.className = "opt-btn";
         btn.innerText = val;
-        btn.disabled = true; // 讀題期間鎖定
+        btn.disabled = true;
         btn.addEventListener("click", () => handleSelectAnswer(val, q.ans, btn));
         optionsGrid.appendChild(btn);
       });
 
-      // 凍結計時條
       timerBar.style.transform = "scaleX(1)";
       timerStatusText.innerText = "🔊 語音讀題中 (不計時)...";
       timerSecondsText.innerText = "15.0s";
       companionBubbleText.innerText = `第 ${index + 1} 題。請找出 ${q.a} 和 ${q.b} 的最小公倍數。`;
 
-      // 朗讀題目
       speakText(`第 ${index + 1} 題。請找出 ${q.a} 和 ${q.b} 的最小公倍數。`, () => {
         startAnsweringTimer();
       });
@@ -1298,7 +1285,6 @@
       isReadingVoice = false;
       skipVoiceBtn.style.display = "none";
 
-      // 解鎖選項按鈕
       document.querySelectorAll(".opt-btn").forEach(btn => btn.disabled = false);
 
       timerStatusText.innerText = "速答剩餘時間獎勵";
@@ -1330,18 +1316,15 @@
       totalTimeCost += Math.min(QUESTION_TIME_LIMIT, Math.round(questionElapsed));
       const remainSec = Math.max(0, QUESTION_TIME_LIMIT - questionElapsed);
 
-      // 禁用所有按鈕
       document.querySelectorAll(".opt-btn").forEach(btn => btn.disabled = true);
 
       if (chosen === correct) {
-        // 答對
         playSound("correct");
         clickedBtn.classList.add("correct");
         correctCount++;
         combo++;
         if (combo > maxCombo) maxCombo = combo;
 
-        // 計算分數：基礎100分 + 速度加分 * 連擊倍率
         const speedBonus = Math.round(remainSec * 15);
         const comboMultiplier = 1 + (combo - 1) * 0.2;
         const earned = Math.round((100 + speedBonus) * comboMultiplier);
@@ -1352,13 +1335,11 @@
         updateHUD();
         scheduleNextTransition(praise);
       } else {
-        // 答錯
         playSound("wrong");
         clickedBtn.classList.add("wrong");
         combo = 0;
         updateHUD();
 
-        // 標記正確答案
         document.querySelectorAll(".opt-btn").forEach(btn => {
           if (parseInt(btn.innerText) === correct) btn.classList.add("correct");
         });
@@ -1396,12 +1377,12 @@
       updateHUD();
 
       const q = currentQuestions[qIndex];
-      hintBox.innerHTML = `<strong>💡 卓楠列舉法秘技：</strong><br>${q.tip}`;
+      hintBox.innerHTML = `<strong>💡 何SIR列舉法秘技：</strong><br>${q.tip}`;
       hintBox.style.display = "block";
       hintTriggerBtn.disabled = true;
       hintTriggerBtn.style.opacity = "0.5";
 
-      companionBubbleText.innerText = "卓楠小秘技已開啟，注意扣除 80 分！";
+      companionBubbleText.innerText = "何SIR小秘技已開啟，注意扣除 80 分！";
     }
 
     function scheduleNextTransition(voiceFeedback) {
@@ -1409,7 +1390,6 @@
       speakText(voiceFeedback, () => {
         nextStepTimeoutId = setTimeout(triggerGoNext, 400);
       });
-      // 6秒自動跳題防護
       nextStepTimeoutId = setTimeout(triggerGoNext, 6000);
     }
 
@@ -1423,11 +1403,20 @@
     }
 
     /* =========================================================
-       6. 挑戰結束與個人化報告生成
+       6. 結算防重覆機制與報告生成
        ========================================================= */
     let lastReportSummary = "";
 
     async function endGame() {
+      // 防重覆上載鎖：若已結算過直接返回
+      if (isGameEnded || hasUploadedScore) return;
+      isGameEnded = true;
+      hasUploadedScore = true;
+
+      clearInterval(timerInterval);
+      if (nextStepTimeoutId) clearTimeout(nextStepTimeoutId);
+      window.speechSynthesis.cancel();
+
       gameScreen.style.display = "none";
       resultScreen.style.display = "block";
 
@@ -1436,7 +1425,6 @@
       document.getElementById("resAccuracy").innerText = `${correctCount}/10`;
       document.getElementById("resAvgTime").innerText = `${avgTime}s`;
 
-      // 產生 4 階個人化評語
       const report = generateAIAssessment(correctCount, score, avgTime, maxCombo);
       document.getElementById("resBadgeIcon").innerText = report.icon;
       document.getElementById("resBadgeTitle").innerText = report.title;
@@ -1446,7 +1434,7 @@
 
       lastReportSummary = report.speech;
 
-      // 寫入 Google Sheet 雲端並刷新榜單
+      // 嚴格確保只呼叫一次上載
       const entry = {
         name: playerName,
         score: score,
@@ -1456,7 +1444,6 @@
       };
       await recordScoreToCloud(entry);
 
-      // 播放總結語音
       speakText(lastReportSummary);
     }
 
@@ -1467,7 +1454,7 @@
           title: "疾風數感大師",
           tag: "卓越成就",
           speech: `太令人驚嘆了，${playerName} 同學！你答對了 ${correct} 題，答題速度像閃電一樣快，充分掌握了先列大數倍數的絕技！小狗老師以你為榮，風溪第一小學的榮譽榜上有你的名字啦！`,
-          html: `<strong>汪汪！表現極致卓越！</strong><br>你在 10 題中奪下 <strong>${correct} 題正確</strong>，斬獲最高 <strong>${maxC} 連擊</strong>！不僅計算速度極快（平均 ${avgTime} 秒），更完全體現了先從較大數列舉的高階數感！`,
+          html: `<strong>汪汪！表現極致卓越！</strong><br>你在 10 題中奪下 <strong>${correct} 題正確</strong>，斬獲最高 <strong>${maxC} 連擊</strong>！不僅計算速度極快（平均 ${avgTime} 秒），更完全體現了何SIR先從較大數列舉的高階數感！`,
           tip: "你已經具備頂尖的敏捷心算能力！下次挑戰嘗試完全不使用提示，刷新風雲榜紀錄吧！"
         };
       } else if (correct >= 7) {
@@ -1484,7 +1471,7 @@
           icon: "🌱",
           title: "堅毅探索先鋒",
           tag: "潛力無窮",
-          speech: `恭喜你順利完成挑戰，${playerName} 同學！你答對了 ${correct} 題，已經掌握了最小公倍數的基本概念。記住多用卓楠的方法先列大數，你會算得更快！`,
+          speech: `恭喜你順利完成挑戰，${playerName} 同學！你答對了 ${correct} 題，已經掌握了最小公倍數的基本概念。記住多用何SIR的方法先列大數，你會算得更快！`,
           html: `<strong>值得鼓勵！基本功扎實！</strong><br>順利答對 <strong>${correct} 題</strong>。你已經清楚掌握了最小公倍數（L.C.M.）的意義，部分題目只要再注意檢查倍數即可！`,
           tip: "試著不要從小數慢慢列舉，直接鎖定大數倍數並判斷是否能被小數整除，速度會快一倍！"
         };
@@ -1508,6 +1495,8 @@
 
     function resetToStart() {
       window.speechSynthesis.cancel();
+      isGameEnded = false;
+      hasUploadedScore = false;
       resultScreen.style.display = "none";
       startScreen.style.display = "block";
       fetchLeaderboard();
